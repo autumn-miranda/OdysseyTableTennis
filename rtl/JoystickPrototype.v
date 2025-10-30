@@ -243,26 +243,30 @@ reg [3:0] pix_ena;
 reg [10:0] player1Width = 11'sd40;
 reg [10:0] player1Height = 11'sd40;
 
-reg [7:0] x_val;
-reg [7:0] y_val;
+reg signed [7:0] x_val;
+reg signed [7:0] y_val;
 
-//assign y_val = (direct_y > 7'd128)? 7'd254 + direct_y[15:8]: y_val;
-//assign x_val = (direct_x > 7'd128)? 7'd254 + direct_x[7:0]: x_val;
+//assign y_val = (direct_y > -7'sd127)? 7'd254 + direct_y[15:8]: y_val;
+//assign x_val = (direct_x > -7'sd127)? 7'd254 + direct_x[7:0]: x_val;
 
 
-assign y_val = 7'd254 + direct_y[15:8];
-assign x_val = 7'd254 + direct_x[7:0];
+//assign y_val = 7'd254 + direct_y[15:8];
+//assign x_val = 7'd254 + direct_x[7:0];
+
+assign y_val = 7'd200 + direct_y[15:8];
+assign x_val = direct_x[7:0];
+//changing x_val addition had no effect on dot pos
 
 //assign video = (direct_x + direct_y > 0)? 8'd1:(cos_g >= rnd_c) ? {cos_g - rnd_c, 2'b00} : 8'd0;
 
 always @(posedge clk) begin
-	
+	//Should width and height be the other way around?
 	pix_ena[0] = (vc < (y_val + player1Width) ) && (vc > y_val);
 	pix_ena[1] = (hc < (x_val + player1Height)) && (hc > x_val);
 	
 	
 	if(pix_ena[1] && pix_ena[0]) //bitwise OR enabled pixels (returns true if any bit is 1)
-			pixel <= 8'b111_111_11;//turn enabled pixel white
+			pixel <= 8'b111_101_11;//turn enabled pixel white
 	else if( vc && hc == 10'd200) pixel = 8'b101_001_11;
 	else pixel <= 8'h00; 
 
