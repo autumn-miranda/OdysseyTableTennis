@@ -76,6 +76,7 @@ set_global_assignment -name SEED 1
 source sys/sys.tcl
 source sys/sys_analog.tcl
 source files.qip
+set_global_assignment -name VERILOG_FILE rtl/mixedModule.v
 set_global_assignment -name QIP_FILE files.qip
 set_global_assignment -name VERILOG_FILE build_id.v
 set_global_assignment -name CDF_FILE jtag.cdf

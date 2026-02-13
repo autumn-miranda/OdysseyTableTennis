@@ -229,6 +229,7 @@ localparam CONF_STR = {
 	"P2O[7:6],Option 2,1,2,3,4;",
 	"-;",
 	"-;",
+	"J1, p2 right, p2 left, p2 down, p2 up, p1 english up, p1 english down, p2 english up, p2 english down, p1 serve, p2 serve, wall right, wall left;",
 	"T[0],Reset;",
 	"R[0],Reset and close OSD;",
 	"v,0;", // [optional] config version 0-99. 
@@ -260,9 +261,10 @@ hps_io #(.CONF_STR(CONF_STR)) hps_io
 	.status(status),
 	.status_menumask({status[5]}),
 	
-	.ps2_key(ps2_key),
-	.joystick_l_analog_0(joy[15:0]),
-	.joystick_r_analog_0(joy[31:16])
+	.joystick_0(joy[31:0])
+	//.ps2_key(ps2_key),
+	//.joystick_l_analog_0(joy[15:0]),
+	//.joystick_r_analog_0(joy[31:16])
 );
 
 ///////////////////////   CLOCKS   ///////////////////////////////
@@ -287,7 +289,7 @@ wire ce_pix;
 wire [7:0] video;
 
 
-mycore mycore
+mixMod mixMod
 (
 	.clk(clk_sys),
 	.reset(reset),
@@ -295,8 +297,13 @@ mycore mycore
 	.pal(status[2]),
 	.scandouble(forced_scandoubler),
 	
-	.direct_x(joy[15:0]),
-	.direct_y(joy[31:16]),
+	//.direct_x(joy[15:0]),
+	//.direct_y(joy[31:16]),
+	.direct(joy[3:0]),
+   .direct2(joy[7:4]),
+   .english(joy[11:8]),
+   .serve(joy[13:12]),
+   .wallDirect(joy[15:14]),
 
 	.ce_pix(ce_pix),
 
@@ -309,24 +316,7 @@ mycore mycore
    .r(VGA_R),
    .g(VGA_G),
    .b(VGA_B)
-	//.video(video)
 );
-
-/*
-JoystickPrototype JoystickPrototype
-(
-	  .color(color),
-     .direct_x(joy[15:0]),
-     .direct_y(joy[31:16]),
-	  .ce_pix(ce_pix),
-     .pclk  (clk_sys),
-     .hs	(VGA_HS),
-     .vs	(VGA_VS),
-     .r 	(VGA_R),
-     .g 	(VGA_G),
-     .b 	(VGA_B),
-     .VGA_DE(VGA_DE)
-);*/
 
 
 assign CLK_VIDEO = clk_sys;
@@ -336,10 +326,12 @@ assign CE_PIXEL = ce_pix;
 assign VGA_DE = ~(HBlank | VBlank);
 assign VGA_HS = HSync;
 assign VGA_VS = VSync;
-/*assign VGA_G  = (!col || col == 2) ? video : 8'd0;
-assign VGA_R  = (!col || col == 1) ? video : 8'd0;
-assign VGA_B  = (!col || col == 3) ? video : 8'd0;
-*/
+
+
+//assign VGA_G  = (!col || col == 2) ? video : 8'd0;
+//assign VGA_R  = (!col || col == 1) ? video : 8'd0;
+//assign VGA_B  = (!col || col == 3) ? video : 8'd0;
+
 
 reg  [26:0] act_cnt;
 always @(posedge clk_sys) act_cnt <= act_cnt + 1'd1; 

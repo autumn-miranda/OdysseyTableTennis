@@ -10,7 +10,6 @@ module JoystickPrototype (
    // pixel clock
    input  pclk,
 	input ce_pix,
-	input [7:0] color,
 	input [15:0] direct_x,  	//left joystick
 	input [15:0] direct_y, 	//right joystick
 	//input reset[1:0],
@@ -71,7 +70,7 @@ always@(posedge pclk) begin
 	end
 end
 
-
+/*
 
 // read VRAM
 reg [13:0] video_counter;
@@ -99,7 +98,106 @@ reg [7:0] y_val;
 
 
 /*pix_ena[2] = (v_cnt < (direct_x + player1Width)) && (v_cnt > direct_x);
-pix_ena[3] = (h_cnt < (direct_y + player1Height)) && (h_cnt > direct_y);*/
+pix_ena[3] = (h_cnt < (direct_y + player1Height)) && (h_cnt > direct_y);
+r_spotGen #(.START_X(11'sd490), .START_Y(11'sd100), .SPEED(5'sd2), .START_SPEED(5'sd2)) player1(
+.pclk(pclk),
+.direct(direct[3:0]),
+.vs(vs),
+.h_cnt({1'b0,h_cnt[9:0]}),
+.v_cnt({1'b0,v_cnt[9:0]}),
+.speed_enable({player_speed[1], player_speed[0], blank[1]}),
+.spot_enable(pix_ena[0]),
+.reset(blank[1]),
+.width(player1Width), 
+.height(player1Height)
+);
+
+r_spotGen #(.START_X(11'sd490), .START_Y(11'sd100), .SPEED(5'sd2), .START_SPEED(5'sd2)) player2(
+.pclk(pclk),
+.direct(direct2[3:0]),
+.vs(vs),
+.h_cnt({1'b0,h_cnt[9:0]}),
+.v_cnt({1'b0,v_cnt[9:0]}),
+.speed_enable({player_speed[3], player_speed[2], blank[1]}),
+.spot_enable(pix_ena[1]),
+.reset(blank[1]),
+.width(player2Width), 
+.height(player2Height)
+);
+
+/*WALL SPOT
+r_spotGen #(.START_X(10'sd320), .START_Y(10'sd0) ) wall(
+.pclk(pclk),
+.direct({2'b0, wallDirect[1:0]}),
+.vs(vs),
+.h_cnt({1'b0,h_cnt[9:0]}),
+.v_cnt({1'b0,v_cnt[9:0]}),
+.speed_enable(blank),
+.spot_enable(pix_ena[2]),
+.reset(blank[1]),
+.width(wallWidth),
+.height()
+);
+
+/*BALL SPOT
+r_spotGen #(.START_X(-11'sd70), .START_Y(10'sd100), .START_SPEED(10'sd0)) ball(
+.pclk(pclk),
+.direct(ballDirect),
+.vs(vs),
+.h_cnt({1'b0, h_cnt[9:0]}),
+.v_cnt({1'b0,v_cnt[9:0]}),
+.speed_enable(ballHold[1:0]),
+.spot_enable(pix_ena[3]),
+.reset(serve[0] || serve[1]),
+.width(ballWidth), 
+.height(ballHeight)
+);
+//reset is used to reset the ball position for a serve
+
+//works by comparing the enabled pixels
+//serves are also counted as collisions
+r_gateMatrix collisions(
+.p1_col((pix_ena[0] && pix_ena[3]) || serve[0]),
+.p2_col((pix_ena[1] && pix_ena[3]) || serve[1]),
+.wall_col(pix_ena[2] && pix_ena[3]),
+
+.ena_player(col_ena[1:0]),
+
+.flip_v(ballHold[2])
+
+);
+
+//when collision switches flip it to the other 
+
+englishFlipFlop englishFF(
+.pclk(vs),
+.d({english, col_ena[1:0]}), 
+.enable(col_ena[1:0]),
+.direct(ballHold[2]),
+//.prev_enable(prev),
+.p(ballHold[1:0]),
+.q(ballDirect)
+);
+
+/*always@(col_ena[0]) begin
+	prev <= col_ena[1:0];
+end
+
+playerSpeed player1speed(
+	.vs(vs),
+	.direct(direct[3:2]),
+	.speed_enable(player_speed[0]),
+	.speed_reset(player_speed[1])
+);
+
+playerSpeed player2speed(
+	.vs(vs),
+	.direct(direct2[3:2]),
+	.speed_enable(player_speed[2]),
+	.speed_reset(player_speed[3])
+);
+
+
 
 //basically our summer module
 always@(posedge pclk) begin
@@ -142,7 +240,7 @@ assign b = { 4{pixel[1:0]}};
 
 //assign VGA_DE  = ~(hblank | vblank);
 assign VGA_DE = de;
-
+*/
 endmodule
 
 
@@ -246,29 +344,40 @@ reg [10:0] player1Height = 11'sd40;
 reg signed [7:0] x_val;
 reg signed [7:0] y_val;
 
-//assign y_val = (direct_y > -7'sd127)? 7'd254 + direct_y[15:8]: y_val;
-//assign x_val = (direct_x > -7'sd127)? 7'd254 + direct_x[7:0]: x_val;
+//if =127, ignore the last bit?
+assign y_val = $signed(direct_y[15:8] + 8'd100);//(direct_y > 0)? 7'd100 + direct_y[15:8]: 7'd100 + direct_y[15:8];
+assign x_val = $signed(direct_x[7:0] + 8'd300);//(direct_x > 0)? 7'd100 + direct_x[7:0]: 7'd100 + direct_x[7:0];
 
 
 //assign y_val = 7'd254 + direct_y[15:8];
 //assign x_val = 7'd254 + direct_x[7:0];
 
-assign y_val = 7'd200 + direct_y[15:8];
-assign x_val = direct_x[7:0];
+//assign y_val = 7'd200 + direct_y[15:8];
+//assign x_val = direct_x[7:0];
 //changing x_val addition had no effect on dot pos
+
 
 //assign video = (direct_x + direct_y > 0)? 8'd1:(cos_g >= rnd_c) ? {cos_g - rnd_c, 2'b00} : 8'd0;
 
 always @(posedge clk) begin
 	//Should width and height be the other way around?
-	pix_ena[0] = (vc < (y_val + player1Width) ) && (vc > y_val);
-	pix_ena[1] = (hc < (x_val + player1Height)) && (hc > x_val);
+	//pix_ena[0] = ((vc < (y_val + player1Width) ) && (vc > y_val));
+	//pix_ena[1] = ((hc < (x_val + player1Height)) && (hc > x_val));
+	
+	pix_ena[0] = (vc >= $signed(y_val) && vc <= $signed((player1Height + y_val)));
+	pix_ena[1] = (hc >= $signed(x_val) && hc <= $signed((player1Width + x_val)));
 	
 	
-	if(pix_ena[1] && pix_ena[0]) //bitwise OR enabled pixels (returns true if any bit is 1)
+	pix_ena[2] = (vc == $signed(direct_y[15:8])+ 7'd100);
+	pix_ena[3] = (hc == $signed(direct_x[7:0]) + 7'd100);
+	
+	if(pix_ena[2] && pix_ena[3])
+			pixel <= 8'b101_111_11;
+	else if(pix_ena[1] && pix_ena[0])
 			pixel <= 8'b111_101_11;//turn enabled pixel white
 	else if( vc && hc == 10'd200) pixel = 8'b101_001_11;
-	else pixel <= 8'h00; 
+	else if(vc == 10'd127 && hc == 10'd127) pixel = 8'b101_100_11;
+	else pixel <= 8'b111_000_00;//8'h00; 
 
 end
 

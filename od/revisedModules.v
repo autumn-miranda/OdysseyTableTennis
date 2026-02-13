@@ -47,7 +47,7 @@ always@(posedge vs) begin
 	//3'b101 starts at 5 and is true every 8 vs
 	if(speedCounter[2:0] == 3'b101) begin
 	//currently 5 and -5 are the bounds of the speed.
-	//so it doesn't get to fast
+	//so it doesn't get too fast
 		if(speed_enable[1] && speed_v < 11'sd5) speed_v <= speed_v+SPEED;
 		if(speed_enable[0] && speed_v > -11'sd5) speed_v <= speed_v-SPEED;
 		if(speed_enable[2]) speed_v <= SPEED;
@@ -160,7 +160,7 @@ output reg [3:0] q
 		//one AND for each set of controls
 		if(direct) begin //going up
 			p[1] <= ((d[4] && enable[1]) || (d[2] && enable[0]))? 1'b1: 1'b0; //add to speed
-			p[0] <= ((d[5] && enable[1]) || (d[3] && enable[0]))? 1'b1: 1'b0; //subtract speedd
+			p[0] <= ((d[5] && enable[1]) || (d[3] && enable[0]))? 1'b1: 1'b0; //subtract speed
 		end
 		else begin //going down
 			p[0] <= ((d[4] && enable[1]) || (d[2] && enable[0]))? 1'b1: 1'b0;
