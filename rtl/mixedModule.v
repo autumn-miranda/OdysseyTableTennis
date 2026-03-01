@@ -110,7 +110,6 @@ reg [7:0] video_counter;
 reg [7:0] pixel;						//the color of the pixel
 reg de;									//data enable, low on blanking periods
 reg [3:0] blank = 4'b0000;			//this is just an empty register we can use  to zero out values
-//reg [2:0] serve = 3'b000; 			//why use that and not just a literal? I think it was just for clarity
 
 wire [3:0] pix_ena;					//each spot generator gets one bit in this wire
 wire [2:0] col_ena;					//[1:0]player collisions  [2]wall collision
@@ -130,8 +129,6 @@ reg [7:0] x_val;
 reg [7:0] y_val;
 
 
-/*pix_ena[2] = (v_cnt < (direct_x + player1Width)) && (v_cnt > direct_x);
-pix_ena[3] = (h_cnt < (direct_y + player1Height)) && (h_cnt > direct_y);*/
 r_spotGen #(.START_X(11'sd100), .START_Y(11'sd100), .SPEED(5'sd2), .START_SPEED(5'sd2)) player1(
 .pclk(clk),
 .direct(direct),
@@ -207,14 +204,10 @@ englishFlipFlop englishFF(
 .d({english, col_ena[1:0]}), 
 .enable(col_ena[1:0]),
 .direct(ballHold[2]),
-//.prev_enable(prev),
 .p(ballHold[1:0]),
 .q(ballDirect)
 );
 
-/*always@(col_ena[0]) begin
-	prev <= col_ena[1:0];
-end*/
 
 playerSpeed player1speed(
 	.vs(VSync),
@@ -234,44 +227,14 @@ playerSpeed player2speed(
 
 //basically our summer module
 always@(posedge clk) begin
-        // The video counter is being reset at the begin of each vsync.
-		  //y_val = 7'd254 + direct_x[15:8];
-		  //x_val = 7'd254 + direct_x[7:0];
-		  
-	//pix_ena[0] = (vc < (y_val + player1Width)) && (vc > y_val); //works but axis is sideways?
-	//pix_ena[1] = (hc < (x_val + player1Height)) && (hc > x_val);//doesn't work
-	
-	/*if(vc == 10'd10) //bitwise OR enabled pixels (returns true if any bit is 1)
-			pixel <= 8'b111_111_11;//turn enabled pixel white
-			
-	if(HBlank + VBlank == 0)
-		pixel <= 8'b000_111_11;*/
-	
 	// visible area?
-	if(HBlank + VBlank == 0) begin //if within visible area
-		//if(h_cnt[1:0] == 2'b11)
-			//video_counter <= video_counter + 8'd1;
+	if(HBlank + VBlank == 0) //if within visible area
 			video_counter = hc + vc;
 		
-		//if(pix_ena[0] and ball){flip flop ball direction}
-		if(|pix_ena) //bitwise OR enabled pixels (returns true if any bit is 1)
-			pixel <= 8'b111_111_11;//turn enabled pixel white
-		//else if( hc + vc == direct_x[9:0] + direct_y[9:0]) pixel <= 8'b101_001_11;
-		else pixel <= 8'h00; 
-		de<=1;
-	end 
-	else begin
-		if(HSync) begin //if h_cnt is at the start of the hsync range
-			/*if(VSync) //if v_cnt is at the start of the vsync range
-				video_counter <= 14'd0;//reset to 0
-			/*else if((vc < V) && (vc[1:0] != 2'b11))
-			//reset video counter to beginning of line
-				video_counter <= video_counter - 8'd640;*/
-		de<=0;
-		end
-			
-		pixel <= 8'h00;   //blanks screen to black
-	end
+		
+	if(|pix_ena) //bitwise OR enabled pixels (returns true if any bit is 1)
+		pixel <= 8'b111_111_11;//turn enabled pixel white
+	else pixel <= 8'h00; 
 end
 
 // seperate 8 bits into three colors (332)
@@ -279,12 +242,5 @@ assign r = { pixel[7:5],   pixel[7:5],  pixel[7:6]};
 assign g = { pixel[4:2],  pixel[4:2], pixel[4:3] };
 assign b = { 4{pixel[1:0]}};
 
-
-
-/*assign r = video_counter;
-assign g = video_counter;
-assign b = video_counter;*/
-//assign VGA_DE  = ~(hblank | vblank);
-//assign VGA_DE = de;
 
 endmodule

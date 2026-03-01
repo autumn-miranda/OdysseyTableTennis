@@ -87,8 +87,9 @@ always @(posedge pclk) begin
 	//enable if in bounds of screen, otherwise do not
 	//I think there should be a better way to determine this
 	//verilog prefers unsigned numbers
-	if(($signed(v_cnt) >= v_move) && $signed(v_cnt) <= (height + v_move)) begin
-			if(($signed(h_cnt) >= h_move) && ($signed(h_cnt) <= (width + h_move))) begin
+	//if(vs) spot_enable <= 0;
+	if(($signed(v_cnt) >= v_move) && $signed(v_cnt) <= $signed(height + v_move)) begin
+			if(($signed(h_cnt) >= h_move) && ($signed(h_cnt) <= $signed(width + h_move))) begin
 				spot_enable <= 1; 
 			end
 			else spot_enable <= 0;
