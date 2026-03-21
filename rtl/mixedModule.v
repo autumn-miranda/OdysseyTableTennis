@@ -148,7 +148,7 @@ r_spotGen #(.START_X(11'sd390), .START_Y(11'sd100), .SPEED(5'sd2), .START_SPEED(
 .vs(VSync),
 .h_cnt({1'b0,hc[9:0]}),
 .v_cnt({1'b0,vc[9:0]}),
-.speed_enable({player_speed[3], player_speed[2], blank[1]}),
+.speed_enable({player_speed[2], player_speed[3], blank[1]}),
 .spot_enable(pix_ena[1]),
 .reset(blank[1]),
 .width(player1Width), 
@@ -228,12 +228,13 @@ playerSpeed player2speed(
 //basically our summer module
 always@(posedge clk) begin
 	// visible area?
+	//pixel <= {|joy[31:28], |joy[27:24],|joy[23:20],|joy[19:16],|joy[15:12],|joy[11:8],|joy[7:4],|joy[3:0]};
 	if(HBlank + VBlank == 0) //if within visible area
 			video_counter = hc + vc;
 		
 		
 	if(|pix_ena) //bitwise OR enabled pixels (returns true if any bit is 1)
-		pixel <= 8'b111_111_11;//turn enabled pixel white
+		pixel <= 8'b111_111_11;//turn enabled pixel white 
 	else pixel <= 8'h00; 
 end
 

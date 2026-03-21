@@ -229,7 +229,8 @@ localparam CONF_STR = {
 	"P2O[7:6],Option 2,1,2,3,4;",
 	"-;",
 	"-;",
-	"J1, p2 right, p2 left, p2 down, p2 up, p1 english up, p1 english down, p2 english up, p2 english down, p1 serve, p2 serve, wall right, wall left;",
+	"J1, English Up, English Down, Serve, Wall Right, Wall Left",
+	
 	"T[0],Reset;",
 	"R[0],Reset and close OSD;",
 	"v,0;", // [optional] config version 0-99. 
@@ -243,7 +244,8 @@ wire forced_scandoubler;
 wire   [1:0] buttons;
 wire [127:0] status;
 wire  [10:0] ps2_key;
-wire [31:0] joy;
+wire [31:0] joy0;
+wire [31:0] joy1;
 
 
 
@@ -261,7 +263,8 @@ hps_io #(.CONF_STR(CONF_STR)) hps_io
 	.status(status),
 	.status_menumask({status[5]}),
 	
-	.joystick_0(joy[31:0])
+	.joystick_0(joy0[31:0]),
+	.joystick_1(joy1[31:0])
 	//.ps2_key(ps2_key),
 	//.joystick_l_analog_0(joy[15:0]),
 	//.joystick_r_analog_0(joy[31:16])
@@ -288,7 +291,6 @@ wire VSync;
 wire ce_pix;
 wire [7:0] video;
 
-
 mixMod mixMod
 (
 	.clk(clk_sys),
@@ -297,14 +299,13 @@ mixMod mixMod
 	.pal(status[2]),
 	.scandouble(forced_scandoubler),
 	
-	//.direct_x(joy[15:0]),
-	//.direct_y(joy[31:16]),
-	.direct(joy[3:0]),
-   .direct2(joy[7:4]),
-   .english(joy[11:8]),
-   .serve(joy[13:12]),
-   .wallDirect(joy[15:14]),
-
+	
+	.direct(joy0[3:0]),
+   .direct2(joy1[3:0]),
+   .english({joy1[5:4], joy0[5:4]}),
+   .serve({joy1[6], joy0[6]}),
+   .wallDirect({joy0[7]|joy1[7], joy1[8]|joy0[8]}),
+	
 	.ce_pix(ce_pix),
 
 	.HBlank(HBlank),
