@@ -229,7 +229,7 @@ localparam CONF_STR = {
 	"P2O[7:6],Option 2,1,2,3,4;",
 	"-;",
 	"-;",
-	"J1, English Up, English Down, Serve, Wall Right, Wall Left",
+	"Jn, English Up, English Down, Serve, Wall Left, Wall Right",
 	
 	"T[0],Reset;",
 	"R[0],Reset and close OSD;",
@@ -246,6 +246,8 @@ wire [127:0] status;
 wire  [10:0] ps2_key;
 wire [31:0] joy0;
 wire [31:0] joy1;
+wire [31:0] joy0_stick;
+wire [31:0] joy1_stick;
 
 
 
@@ -264,10 +266,13 @@ hps_io #(.CONF_STR(CONF_STR)) hps_io
 	.status_menumask({status[5]}),
 	
 	.joystick_0(joy0[31:0]),
-	.joystick_1(joy1[31:0])
+	.joystick_1(joy1[31:0]),
 	//.ps2_key(ps2_key),
-	//.joystick_l_analog_0(joy[15:0]),
-	//.joystick_r_analog_0(joy[31:16])
+	.joystick_l_analog_0(joy0_stick[15:0]),
+	.joystick_r_analog_0(joy0_stick[31:16]),
+	
+	.joystick_l_analog_1(joy1_stick[15:0]),
+	.joystick_r_analog_1(joy1_stick[31:16])
 );
 
 ///////////////////////   CLOCKS   ///////////////////////////////
@@ -305,6 +310,8 @@ mixMod mixMod
    .english({joy1[5:4], joy0[5:4]}),
    .serve({joy1[6], joy0[6]}),
    .wallDirect({joy0[7]|joy1[7], joy1[8]|joy0[8]}),
+	.joy0({joy0_stick[31:24], joy0_stick[7:0]}),
+	.joy1({joy1_stick[31:24], joy1_stick[7:0]}),
 	
 	.ce_pix(ce_pix),
 

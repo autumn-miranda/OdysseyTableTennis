@@ -13,6 +13,8 @@ module mixMod (
 	input [1:0] wallDirect,	//wall movement
 	input [3:0] english,
 	input [1:0] serve,
+	input [15:0] joy0,
+	input [15:0] joy1,
 	
 
 	output reg    ce_pix,
@@ -125,33 +127,39 @@ reg [10:0] player1Height = 11'sd40;
 reg [10:0] ballWidth = 11'sd20;
 reg [10:0] ballHeight = 11'sd20;
 
+reg [7:0] joydirect;  	//bit 0: right, bit 1: left, bit 2: down, bit 3: up
+
 reg [7:0] x_val;
 reg [7:0] y_val;
 
-
-r_spotGen #(.START_X(11'sd100), .START_Y(11'sd100), .SPEED(5'sd2), .START_SPEED(5'sd2)) player1(
+/*Player Spots*/
+r_spot #(.START_X(11'sd100), .START_Y(11'sd100), .SPEED(5'sd2), .START_SPEED(5'sd2)) player1(
 .pclk(clk),
-.direct(direct),
+.direct(joydirect[3:0]),
+.h_direct(joy0[7:0]),
+.v_direct(joy0[15:8]),
 .vs(VSync),
 .h_cnt({1'b0,hc[9:0]}),
 .v_cnt({1'b0,vc[9:0]}),
-.speed_enable({player_speed[1], player_speed[0], blank[1]}),
+.speed_enable({player_speed[0], player_speed[1]}),
 .spot_enable(pix_ena[0]),
 .reset(blank[1]),
 .width(player1Width), 
 .height(player1Height)
 );
 
-r_spotGen #(.START_X(11'sd390), .START_Y(11'sd100), .SPEED(5'sd2), .START_SPEED(5'sd2)) player2(
+r_spot #(.START_X(11'sd390), .START_Y(11'sd100), .SPEED(5'sd2), .START_SPEED(5'sd2)) player2(
 .pclk(clk),
-.direct(direct2),
+.direct(joydirect[7:4]),
+.h_direct(joy1[7:0]),
+.v_direct(joy1[15:8]),
 .vs(VSync),
 .h_cnt({1'b0,hc[9:0]}),
 .v_cnt({1'b0,vc[9:0]}),
-.speed_enable({player_speed[2], player_speed[3], blank[1]}),
+.speed_enable({player_speed[2], player_speed[3]}),
 .spot_enable(pix_ena[1]),
 .reset(blank[1]),
-.width(player1Width), 
+.width({player1Width - 3'd5}), 
 .height(player1Height)
 );
 
@@ -209,36 +217,49 @@ englishFlipFlop englishFF(
 );
 
 
-playerSpeed player1speed(
+/*playerSpeed player1speed(
 	.vs(VSync),
-	.direct(direct),
+	.direct(joydirect[3:0]),
 	.speed_enable(player_speed[0]),
 	.speed_reset(player_speed[1])
 );
 
 playerSpeed player2speed(
 	.vs(VSync),
-	.direct(direct2),
+	.direct(joydirect[7:4]),
 	.speed_enable(player_speed[2]),
 	.speed_reset(player_speed[3])
+);*/
+
+joystick_direction p1direct(
+	.joystick(joy0),
+	.clk(clk),
+	
+	.direction(joydirect[3:0])
 );
 
+joystick_direction p2direct(
+	.joystick(joy1),
+	.clk(clk),
+	
+	.direction(joydirect[7:4])
+
+);
 
 
 //basically our summer module
 always@(posedge clk) begin
-	// visible area?
-	//pixel <= {|joy[31:28], |joy[27:24],|joy[23:20],|joy[19:16],|joy[15:12],|joy[11:8],|joy[7:4],|joy[3:0]};
+	// visible area?	
+	
 	if(HBlank + VBlank == 0) //if within visible area
 			video_counter = hc + vc;
-		
-		
-	if(|pix_ena) //bitwise OR enabled pixels (returns true if any bit is 1)
-		pixel <= 8'b111_111_11;//turn enabled pixel white 
+			
+			
+	if(|pix_ena) 
+		pixel <= 8'b111_111_11; 
 	else pixel <= 8'h00; 
 end
 
-// seperate 8 bits into three colors (332)
 assign r = { pixel[7:5],   pixel[7:5],  pixel[7:6]};
 assign g = { pixel[4:2],  pixel[4:2], pixel[4:3] };
 assign b = { 4{pixel[1:0]}};
