@@ -13,8 +13,10 @@ module mixMod (
 	input [1:0] wallDirect,	//wall movement
 	input [3:0] english,
 	input [1:0] serve,
+	input [1:0] pos_reset,
 	input [15:0] joy0,
 	input [15:0] joy1,
+	input [3:0] ballSpeed,
 	
 
 	output reg    ce_pix,
@@ -118,7 +120,7 @@ wire [2:0] col_ena;					//[1:0]player collisions  [2]wall collision
 
 wire [3:0] ballDirect;				//bit 0: right, bit 1: left, bit 2: down, bit 3: up
 wire [2:0] ballHold;					//[2]:up or down [1]:add speed [0]:subtract speed
-wire [3:0] player_speed;			//p1=[1:0] p2=[3:2] even bits true if player is moving in any direction
+wire [7:0] player_speed;			//p1=[1:0] p2=[3:2] even bits true if player is moving in any direction
 											//otherwise odd bits(reset) is true
 											
 reg [1:0] prev;
@@ -141,9 +143,8 @@ r_spot #(.START_X(11'sd100), .START_Y(11'sd100), .SPEED(5'sd2), .START_SPEED(5's
 .vs(VSync),
 .h_cnt({1'b0,hc[9:0]}),
 .v_cnt({1'b0,vc[9:0]}),
-.speed_enable({player_speed[0], player_speed[1]}),
 .spot_enable(pix_ena[0]),
-.reset(blank[1]),
+.reset(pos_reset[0]),
 .width(player1Width), 
 .height(player1Height)
 );
@@ -156,21 +157,21 @@ r_spot #(.START_X(11'sd390), .START_Y(11'sd100), .SPEED(5'sd2), .START_SPEED(5's
 .vs(VSync),
 .h_cnt({1'b0,hc[9:0]}),
 .v_cnt({1'b0,vc[9:0]}),
-.speed_enable({player_speed[2], player_speed[3]}),
 .spot_enable(pix_ena[1]),
-.reset(blank[1]),
+.reset(pos_reset[1]),
 .width({player1Width - 3'd5}), 
 .height(player1Height)
 );
 
 /*WALL SPOT*/
-r_spotGen #(.START_X(10'sd250), .START_Y(10'sd0) ) wall(
+r_spotGen #(.START_X(10'sd250), .START_Y(10'sd0), .START_SPEED(10'sd0) ) wall(
 .pclk(clk),
 .direct({2'b0, wallDirect}),
 .vs(VSync),
 .h_cnt({1'b0,hc[9:0]}),
 .v_cnt({1'b0,vc[9:0]}),
 .speed_enable(blank),
+.speed(5'd3),
 .spot_enable(pix_ena[2]),
 .reset(blank[1]),
 .width(ballWidth),
@@ -178,13 +179,14 @@ r_spotGen #(.START_X(10'sd250), .START_Y(10'sd0) ) wall(
 );
 
 /*BALL SPOT*/
-r_spotGen #(.START_X(11'sd150), .START_Y(10'sd100), .START_SPEED(10'sd0)) ball(
+r_spotGen #(.START_X(11'sd150), .START_Y(10'sd100), .START_SPEED(10'sd0), .SPEED(10'sd2)) ball(
 .pclk(clk),
 .direct(ballDirect),
 .vs(VSync),
 .h_cnt({1'b0, hc[9:0]}),
 .v_cnt({1'b0,vc[9:0]}),
 .speed_enable(ballHold[1:0]),
+.speed(ballSpeed),
 .spot_enable(pix_ena[3]),
 .reset(serve[0] || serve[1]),
 .width(ballWidth), 
@@ -197,12 +199,9 @@ r_spotGen #(.START_X(11'sd150), .START_Y(10'sd100), .START_SPEED(10'sd0)) ball(
 r_gateMatrix collisions(
 .p1_col((pix_ena[0] && pix_ena[3]) || serve[0]),
 .p2_col((pix_ena[1] && pix_ena[3]) || serve[1]),
-.wall_col(pix_ena[2] && pix_ena[3]),
 
 .ena_player(col_ena[1:0]),
-
 .flip_v(ballHold[2])
-
 );
 
 //when collision switches flip it to the other 
@@ -216,20 +215,6 @@ englishFlipFlop englishFF(
 .q(ballDirect)
 );
 
-
-/*playerSpeed player1speed(
-	.vs(VSync),
-	.direct(joydirect[3:0]),
-	.speed_enable(player_speed[0]),
-	.speed_reset(player_speed[1])
-);
-
-playerSpeed player2speed(
-	.vs(VSync),
-	.direct(joydirect[7:4]),
-	.speed_enable(player_speed[2]),
-	.speed_reset(player_speed[3])
-);*/
 
 joystick_direction p1direct(
 	.joystick(joy0),

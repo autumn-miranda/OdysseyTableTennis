@@ -1,14 +1,13 @@
 //============================================================================
-//  Odyssey card modules
+//  Odyssey Table Tennis modules
 //  Copyright (c) 2023 Autumn
 //
 //  The modules are loosely based on the description of the Odyssey's hardware from
 //  https://www.odysseynow.org/Hardware.html
+//  And from observations of the original game's behavior
 //============================================================================
 
-      /*Wall, ball, and Player genterator*/
-		//parameters are the default values that the code is set up with. 
-		//can be overwritten in instatiation
+      /*Wall and ball spot generator*/
 module r_spotGen #(START_X = 10'sd0, START_Y = 10'sd0, SPEED = 5'sd1, START_SPEED = 10'sd1)
 (
 input pclk,
@@ -17,6 +16,7 @@ input vs,
 input [10:0] h_cnt,
 input [10:0] v_cnt,
 input [2:0] speed_enable,			//0:decrease speed, 1: increase speed, 2: reset
+input [3:0] speed,
 input reset,
 input wire [10:0] width, height, 
 
@@ -33,7 +33,7 @@ reg signed [10:0] speed_h = SPEED;
 reg [7:0] speedCounter = 8'b0;
 
 always@(speed_v) begin
-	speed_h <= (speed_v <= 10'sd2)? 5'sd2: SPEED;
+	speed_h <= (speed_v <= 10'sd2)? speed: speed;
 end
 
 always@(posedge vs) begin
@@ -44,26 +44,23 @@ always@(posedge vs) begin
 		if(speed_enable[2]) speed_v <= SPEED;
 	end
 	
-	if(direct[0] == 1'b1 && h_move <= 11'sd740) h_move <= (h_move + speed_h);    //right
-	if(direct[1] == 1'b1 && h_move >= -11'sd200) h_move <= (h_move - speed_h);  //left
+	if(direct[0] == 1'b1 && h_move <= 11'sd590) h_move <= (h_move + speed_h);    //right
+	if(direct[1] == 1'b1 && h_move >= -11'sd100) h_move <= (h_move - speed_h);  //left
 
-	if(direct[2] == 1'b1 && v_move <= 11'sd600) v_move <= (v_move + speed_v);    //down
-	if(direct[3] == 1'b1 && v_move >= -11'sd200) v_move <= (v_move - speed_v);  //up
+	if(direct[2] == 1'b1 && v_move <= 11'sd500) v_move <= (v_move + speed_v);    //down
+	if(direct[3] == 1'b1 && v_move >= -11'sd100) v_move <= (v_move - speed_v);  //up
 	
 	
 	//reset is currently only used for the ball
 	if(reset) begin
 		if(v_move >= 11'sd400 || v_move <= -11'sd50) begin	//off the top or bottom of screen
-			if (h_move >= 11'sd640 || h_move <= -11'sd50) begin // off the side of screen
 				v_move <= 11'd200;
+			if (h_move >= 11'sd590 || h_move <= -11'sd50) begin // off the side of screen
 				//reset speed back to one if it's higher, otherwise stay the same
-				//what's with the size differences
 				speed_v <= (speed_v[9:0] >= 10'sd2)? 11'sd1: speed_v;
-				//i might have been trying to take the absolute value of speed_v but thats wrong
 			end
 			else begin
-				h_move <= (h_move >= 11'sd300)? 11'sd640: -11'sd50;//go to side of screen if in the middle
-				v_move <= 11'd200;
+				h_move <= (h_move >= 11'sd300)? 11'sd590: -11'sd50;//go to side of screen if in the middle
 				speed_v <= (speed_v[9:0] >= 10'sd2)? 11'sd1: speed_v;
 			end
 		end
@@ -91,7 +88,7 @@ endmodule
 
 
 
-
+      /*player spot generator*/
 module r_spot #(START_X = 10'sd0, START_Y = 10'sd0, SPEED = 5'sd1, START_SPEED = 10'sd0)
 (
 input pclk,
@@ -101,7 +98,7 @@ input [7:0] v_direct,
 input vs,
 input [10:0] h_cnt,
 input [10:0] v_cnt,
-input [2:0] speed_enable,
+//input [2:0] speed_enable,
 input reset,
 input wire [10:0] width, height, 
 
@@ -115,69 +112,45 @@ reg signed [10:0] v_move = START_Y; //y position of the spot
 
 reg signed [10:0] speed_v = START_SPEED;
 reg signed [10:0] speed_h = START_SPEED;
-reg [7:0] speedCounter = 8'b0;
 
 
 always@(posedge vs) begin
-	speedCounter <= (speedCounter < 8'b01000110)?(speedCounter + 1'b1): 8'b0;
-	
-		//if(speedCounter[2:0] == 3'b101) begin
-		
-		
-			/*if($signed(h_direct[7:0]) > 120 || $signed(h_direct[7:0]) < -120)
-				speed_h <= 5'd6;
-			else if($signed(h_direct[7:0]) > 105 || $signed(h_direct[7:0]) < -105)
-				speed_h <= 5'd4;
-			else if($signed(h_direct[7:0]) > 90 || $signed(h_direct[7:0]) < -90)
-				speed_h <= 5'd2;
-			else
-				speed_h <= 0;*/
-				
-				if($signed(h_direct[7:0]) < -20)
-					speed_h <= (($signed(h_direct[7:0]) * -8'sd1) >> 8'd4) | 8'd2;
-				else if($signed(h_direct[7:0]) > 20)
-					speed_h <= (h_direct[7:0] >> 8'd4) | 8'd2;
-				else 
-					speed_h <= 0;
-				
-				
-			if($signed(v_direct[7:0]) < -20)
-					speed_v <= (($signed(v_direct[7:0]) * -8'sd1) >> 8'd4) | 8'd2;
-				else if($signed(v_direct[7:0]) > 20)
-					speed_v <= (v_direct[7:0] >> 8'd4) | 8'd2;
-				else 
-					speed_v <= 0;
-				
-		//end
-		
-	
-	if(direct[0] == 1'b1 && h_move <= 11'sd740) h_move <= (h_move + speed_h);    //right
-	if(direct[1] == 1'b1 && h_move >= -11'sd200) h_move <= (h_move - speed_h);  //left
 
-	if(direct[2] == 1'b1 && v_move <= 11'sd600) v_move <= (v_move + speed_v);    //down
-	if(direct[3] == 1'b1 && v_move >= -11'sd200) v_move <= (v_move - speed_v);  //up
+	if($signed(h_direct[7:0]) < -20)
+		speed_h <= (($signed(h_direct[7:0]) * -8'sd1) >> 8'd4) | 8'd2;
+	else if($signed(h_direct[7:0]) > 20)
+		speed_h <= (h_direct[7:0] >> 8'd4) | 8'd2;
+	else 
+		speed_h <= 0;
+		
+	
+		
+	if($signed(v_direct[7:0]) < -8'sd20)
+			speed_v <= (($signed(v_direct[7:0]) * -8'sd1) >> 8'd4) | 8'd2;
+		else if($signed(v_direct[7:0]) > 20)
+			speed_v <= (v_direct[7:0] >> 8'd4) | 8'd2;
+		else 
+			speed_v <= 0;
+
+		
+	
+	if(direct[0] == 1'b1 && h_move <= 11'sd590) h_move <= (h_move + speed_h);    //right
+	if(direct[1] == 1'b1 && h_move >= -11'sd100) h_move <= (h_move - speed_h);  //left
+
+	if(direct[2] == 1'b1 && v_move <= 11'sd500) v_move <= (v_move + speed_v);    //down
+	if(direct[3] == 1'b1 && v_move >= -11'sd100) v_move <= (v_move - speed_v);  //up
 	
 	
 	if(reset) begin
-		if(v_move >= 11'sd400 || v_move <= -11'sd50) begin	//off the top or bottom of screen
-			if (h_move >= 11'sd640 || h_move <= -11'sd50) begin // off the side of screen
-				v_move <= 11'd200;
-				//reset speed back to one if it's higher, otherwise stay the same
-				speed_v <= (speed_v[9:0] >= 10'sd2)? 11'sd1: speed_v;
-			end
-			else begin
-				h_move <= (h_move >= 11'sd300)? 11'sd640: -11'sd50;//go to side of screen if in the middle
-				v_move <= 11'd200;
-				speed_v <= (speed_v[9:0] >= 10'sd2)? 11'sd1: speed_v;
-			end
-		end
+		h_move <= START_X; //x position of the spot
+		v_move <= START_Y; //y position of the spot
 	end
 	
 end
 	 
 always @(posedge pclk) begin 
-	if(($signed(v_cnt) >= v_move) && $signed(v_cnt) <= $signed(height + v_move)) begin
-			if(($signed(h_cnt) >= h_move) && ($signed(h_cnt) <= $signed(width + h_move))) begin
+	if(($signed(v_cnt) >= v_move) && $signed(v_cnt) <= $signed(v_move + height)) begin
+			if(($signed(h_cnt) >= h_move) && $signed(h_cnt) <= $signed(h_move + width)) begin
 				spot_enable <= 1; 
 			end
 			else spot_enable <= 0;
@@ -191,14 +164,6 @@ end
 
 endmodule
 
-
-
-
-module joystick_spot();
-
-
-
-endmodule
 
 
 
@@ -228,10 +193,8 @@ endmodule
 module r_gateMatrix(
 input p1_col,
 input p2_col,
-input wall_col,
 
 output reg [1:0] ena_player,
-output reg ena_wall,
 output reg flip_v
 );
 

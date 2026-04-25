@@ -207,7 +207,7 @@ assign VIDEO_ARY = (!ar) ? 12'd3 : 12'd0;
 
 `include "build_id.v" 
 localparam CONF_STR = {
-	"MyCore;;",
+	"Table Tennis;;",
 	"-;",
 	"O[122:121],Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
 	"O[2],TV Mode,NTSC,PAL;",
@@ -221,15 +221,15 @@ localparam CONF_STR = {
 	"d0P1F1,BIN;",
 	"H0P1O[10],Option 1-2,Off,On;",
 	"-;",
-	"P2,Test Page 2;",
+	"P2,Adjust Values;",
 	"P2-;",
 	"P2-, -= Options in page 2 =-;",
 	"P2-;",
-	"P2S0,DSK;",
-	"P2O[7:6],Option 2,1,2,3,4;",
+	//"P2S0,DSK;",
+	"P2O[9:6],Ball Speed,3,4,5,6,7,8,9,10,11,12,13,14,15,0,1,2;",
 	"-;",
 	"-;",
-	"Jn, English Up, English Down, Serve, Wall Left, Wall Right",
+	"Jn, English Up, English Down, Serve, Player Position Reset, Wall Left, Wall Right",
 	
 	"T[0],Reset;",
 	"R[0],Reset and close OSD;",
@@ -309,9 +309,11 @@ mixMod mixMod
    .direct2(joy1[3:0]),
    .english({joy1[5:4], joy0[5:4]}),
    .serve({joy1[6], joy0[6]}),
-   .wallDirect({joy0[7]|joy1[7], joy1[8]|joy0[8]}),
+	.pos_reset({joy1[7],joy0[7]}),
+   .wallDirect({joy0[8]|joy1[8], joy1[9]|joy0[9]}),
 	.joy0({joy0_stick[31:24], joy0_stick[7:0]}),
 	.joy1({joy1_stick[31:24], joy1_stick[7:0]}),
+	.ballSpeed({status[9:6]+5'd3}),
 	
 	.ce_pix(ce_pix),
 
