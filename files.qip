@@ -1,6 +1,5 @@
 set_global_assignment -name VERILOG_FILE rtl/lfsr.v
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/cos.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/TableTennis.v
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/MixedModule.v
 set_global_assignment -name SYSTEMVERILOG_FILE od/revisedModules.v
 set_global_assignment -name SYSTEMVERILOG_FILE od/spotGen.v
