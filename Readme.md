@@ -9,25 +9,11 @@ This core recreates the behavior of the Magnavox Odyssey's Table Tennis game.
 ## Features
 
 * Wall centering control
-* Adjustable Ball Speed Control
-* Translated 3-handed controls to PS 4 
-
-## TO-DO
-
-### Improve Core Accuracy
-
-* Switch serve control to triggers instead of bumpers
-* Imitate english dial behavior on triggers
-* Refactor modules to be suitable for reuse in other Odyssey game card cores
-
-### Add Quality of Life / Debug Features
-
-* Mark where ball is when it travels offscreen
-* Add total core reset 
-* Reset English speed on serve
+* Adjustable ball speed control
+* Translated 3-handed controls to a PS4 controller 
 
 
-### Control Scheme
+## Control Scheme
 
 Developed on a PS4 controller.
 
@@ -45,8 +31,10 @@ Wall Left                | Select
 Wall Right               | Start
 Reset                    | X
 
+### Original Odyssey Controller
 ![Original Odyssey Controller](https://github.com/autumn-miranda/OdysseyTableTennis/blob/master/Images/OdysseyController.jpg)
 
+### Translated Table Tennis Controls
 ![Translated Odyssey Controls](https://github.com/autumn-miranda/OdysseyTableTennis/blob/master/Images/TableTennisControls.jpg)
 
 
@@ -57,4 +45,18 @@ Copy the *.rbf file onto the FPGA board.
 ## Notes
 
 Developed through a deconstruction of the behavior of the original system. The original console's combinaton of anolog and digital cicuits was considered through this core's use of modules to emulate circuit functionality.
+
+## TO-DO
+
+### Improve Core Accuracy
+
+* Switch serve control to triggers instead of bumpers
+* Imitate english dial behavior on triggers
+* Refactor modules to be suitable for reuse in other Odyssey game card cores
+
+### Quality of Life / Debug Features
+
+* Mark where ball is when it travels offscreen
+* Add total core reset 
+* Reset english speed on serve
 
