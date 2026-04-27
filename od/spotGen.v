@@ -1,6 +1,6 @@
 //============================================================================
 //  Odyssey card modules
-//  Copyright (c) 2023 autumn
+//  Copyright (c) 2023-2026 autumn
 //
 //  The modules are loosely based on the description of the Odyssey's hardware from
 //  https://www.odysseynow.org/Hardware.html
@@ -24,38 +24,25 @@ output reg spot_enable
 );
 
 /*My variables*/
-reg signed [10:0] h_move = START_X; //x position of the spot
-reg signed [10:0] v_move = START_Y; //y position of the spot
+reg signed [10:0] h_move = START_X; 
+reg signed [10:0] v_move = START_Y; 
 
 reg signed [10:0] speed_v = START_SPEED;
 reg signed [10:0] speed_h = SPEED;
 reg [7:0] speedCounter = 8'b0;
 
 always@(speed_v) begin
-//What's with the size difference
-//set horizontal move speed based on the vertical speed.
-//This is mostly so that movement looks nicer and goes a bit slower
 	speed_h <= (speed_v <= 10'sd2 || speed_v >= -10'sd2)? 5'sd2: SPEED;
 end
 
 always@(posedge vs) begin
-	//I didn't want to increse the speed every vsync because then it moves to fast
-	//the speed counter counts to 70
-	//verilog doesn't like non power of 2 mod operations, so we can't use it here
 	speedCounter <= (speedCounter < 8'b01000110)?(speedCounter + 1'b1): 8'b0;
-	//if the counter ends in 101, calc speed
-	//3'b101 starts at 5 and is true every 8 vs
 	if(speedCounter[2:0] == 3'b101) begin
-	//currently 5 and -5 are the bounds of the speed.
-	//so it doesn't get too fast
 		if(speed_enable[1] && speed_v < 11'sd5) speed_v <= speed_v+SPEED;
 		if(speed_enable[0] && speed_v > -11'sd5) speed_v <= speed_v-SPEED;
 		if(speed_enable[2]) speed_v <= SPEED;
 	end
 	
-	//if the direction key is being pressed and you aren't offscreen, move
-	//I'm wondering if the arithmetic messes up eventually
-	//since the game breaks if its left on too long
 	if(direct[0] == 1'b1 && h_move <= 11'sd740) h_move <= (h_move + speed_h);    //right
 	if(direct[1] == 1'b1 && h_move >= -11'sd200) h_move <= (h_move - speed_h);  //left
 
@@ -69,9 +56,7 @@ always@(posedge vs) begin
 			if (h_move >= 11'sd640 || h_move <= -11'sd50) begin // off the side of screen
 				v_move <= 11'd200;
 				//reset speed back to one if it's higher, otherwise stay the same
-				//what's with the size differences
 				speed_v <= (speed_v[9:0] >= 10'sd2)? 11'sd1: speed_v;
-				//i might have been trying to take the absolute value of speed_v but thats wrong
 			end
 			else begin
 				h_move <= (h_move >= 11'sd300)? 11'sd640: -11'sd50;//go to side of screen if in the middle
@@ -84,9 +69,6 @@ always@(posedge vs) begin
 end
 	 
 always @(posedge pclk) begin 
-	//enable if in bounds of screen, otherwise do not
-	//I think there should be a better way to determine this
-	//verilog prefers unsigned numbers
 	if(($signed(v_cnt) >= v_move) && $signed(v_cnt) <= (HEIGHT + v_move)) begin
 			if(($signed(h_cnt) >= h_move) && ($signed(h_cnt) <= (WIDTH + h_move))) begin
 				spot_enable <= 1; 
@@ -117,7 +99,7 @@ input pclk,
 input [5:0] d, 
 input [1:0] enable,
 input direct,
-//input [1:0] prev_enable,
+
 output reg [1:0] p,
 output reg [3:0] q
 );
@@ -177,40 +159,9 @@ output reg speed_reset
 );
 
 always @(vs) begin
-	speed_enable = (|direct)? 1'b1: 1'b0; // If any direction buttons are pressed, speed is enabled
+	speed_enable = (|direct)? 1'b1: 1'b0;
 	speed_reset = (~(|direct))? 1'b1: 1'b0;
 end
-
-endmodule
-
-
-
-
-
-
-
-
-
-/*compares signals from spots to see if they collide. will activate other circuits*/
-module gateMatrix(
-input p1_col,
-input p2_col,
-input wall_col,
-
-output reg [1:0] ena_player,
-output reg ena_wall
-);
-
-//collisions are dealt with only when either collision is High (true)
-//otherwise they are ignored
-always@(posedge p1_col, posedge p2_col) begin
-	ena_player[0] <= (p2_col)? 1'b0: 1'b1;
-	ena_player[1] <= (p1_col)? 1'b0: 1'b1;
-	
-	ena_wall <= (p1_col)? 1'b1: 1'b0; //not currently detecting wall collision
-												 //instead im using this value to flip the vdirection of the ball after a collision
-end
-
 
 endmodule
 

@@ -213,20 +213,11 @@ localparam CONF_STR = {
 	"O[2],TV Mode,NTSC,PAL;",
 	"O[4:3],Noise,White,Red,Green,Blue;",
 	"-;",
-	"P1,Test Page 1;",
+	"P1,Adjust Values;",
 	"P1-;",
-	"P1-, -= Options in page 1 =-;",
+	"P1-, -= Options =-;",
 	"P1-;",
-	"P1O[5],Option 1-1,Off,On;",
-	"d0P1F1,BIN;",
-	"H0P1O[10],Option 1-2,Off,On;",
-	"-;",
-	"P2,Adjust Values;",
-	"P2-;",
-	"P2-, -= Options in page 2 =-;",
-	"P2-;",
-	//"P2S0,DSK;",
-	"P2O[9:6],Ball Speed,3,4,5,6,7,8,9,10,11,12,13,14,15,0,1,2;",
+	"P1O[9:6],Ball Speed,3,4,5,6,7,8,9,10,11,12,13,14,15,0,1,2;",
 	"-;",
 	"-;",
 	"Jn, English Up, English Down, Serve, Player Position Reset, Wall Left, Wall Right",
@@ -296,7 +287,7 @@ wire VSync;
 wire ce_pix;
 wire [7:0] video;
 
-mixMod mixMod
+TableTennis TableTennis
 (
 	.clk(clk_sys),
 	.reset(reset),

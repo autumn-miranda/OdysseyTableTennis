@@ -1,6 +1,6 @@
 //============================================================================
-//  Odyssey Table Tennis modules
-//  Copyright (c) 2023 Autumn
+//  Odyssey Table Tennis revised modules
+//  Copyright (c) 2023-2026 Autumn
 //
 //  The modules are loosely based on the description of the Odyssey's hardware from
 //  https://www.odysseynow.org/Hardware.html
@@ -25,8 +25,8 @@ output reg spot_enable
 );
 
 /*My variables*/
-reg signed [10:0] h_move = START_X; //x position of the spot
-reg signed [10:0] v_move = START_Y; //y position of the spot
+reg signed [10:0] h_move = START_X; 
+reg signed [10:0] v_move = START_Y; 
 
 reg signed [10:0] speed_v = START_SPEED;
 reg signed [10:0] speed_h = SPEED;
@@ -51,10 +51,10 @@ always@(posedge vs) begin
 	if(direct[3] == 1'b1 && v_move >= -11'sd100) v_move <= (v_move - speed_v);  //up
 	
 	
-	//reset is currently only used for the ball
+	//reset is currently only used for the ball, not the wall
 	if(reset) begin
 		if(v_move >= 11'sd400 || v_move <= -11'sd50) begin	//off the top or bottom of screen
-				v_move <= 11'd200;
+				v_move <= 11'd100;
 			if (h_move >= 11'sd590 || h_move <= -11'sd50) begin // off the side of screen
 				//reset speed back to one if it's higher, otherwise stay the same
 				speed_v <= (speed_v[9:0] >= 10'sd2)? 11'sd1: speed_v;
@@ -98,7 +98,6 @@ input [7:0] v_direct,
 input vs,
 input [10:0] h_cnt,
 input [10:0] v_cnt,
-//input [2:0] speed_enable,
 input reset,
 input wire [10:0] width, height, 
 
@@ -107,8 +106,8 @@ output reg spot_enable
 );
 
 /*My variables*/
-reg signed [10:0] h_move = START_X; //x position of the spot
-reg signed [10:0] v_move = START_Y; //y position of the spot
+reg signed [10:0] h_move = START_X; 
+reg signed [10:0] v_move = START_Y; 
 
 reg signed [10:0] speed_v = START_SPEED;
 reg signed [10:0] speed_h = START_SPEED;
@@ -142,8 +141,8 @@ always@(posedge vs) begin
 	
 	
 	if(reset) begin
-		h_move <= START_X; //x position of the spot
-		v_move <= START_Y; //y position of the spot
+		h_move <= START_X;
+		v_move <= START_Y;
 	end
 	
 end
@@ -189,8 +188,8 @@ endmodule
 
 
 
-/*compares signals from spots to see if they collide. will activate other circuits*/
-module r_gateMatrix(
+
+module r_collisions(
 input p1_col,
 input p2_col,
 
@@ -221,7 +220,6 @@ input pclk,
 input [5:0] d, 
 input [1:0] enable,
 input direct,
-//input [1:0] prev_enable,
 output reg [1:0] p,
 output reg [3:0] q
 );
@@ -232,8 +230,8 @@ output reg [3:0] q
 		
 		//one AND for each set of controls
 		if(direct) begin //going up
-			p[1] <= ((d[4] && enable[1]) || (d[2] && enable[0]))? 1'b1: 1'b0; //add to speed
-			p[0] <= ((d[5] && enable[1]) || (d[3] && enable[0]))? 1'b1: 1'b0; //subtract speed
+			p[1] <= ((d[4] && enable[1]) || (d[2] && enable[0]))? 1'b1: 1'b0; //p[1] high - add to speed
+			p[0] <= ((d[5] && enable[1]) || (d[3] && enable[0]))? 1'b1: 1'b0; //p[0] high - subtract speed
 		end
 		else begin //going down
 			p[0] <= ((d[4] && enable[1]) || (d[2] && enable[0]))? 1'b1: 1'b0;
@@ -242,6 +240,6 @@ output reg [3:0] q
 	end
 	
 endmodule
-//up, down, left, right
+//q[3:0] - up, down, left, right
 
 

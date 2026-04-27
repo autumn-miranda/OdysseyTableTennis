@@ -1,260 +1,28 @@
+// Based on:
 // A simple system-on-a-chip (SoC) for the MiST
 // (c) 2015 Till Harbaum
+//
+//	Main module for a Magnavox Odyssey Table Tennis Core
+// (c) 2026 Autumn Miranda
 
-// VGA controller generating 160x100 pixels. The VGA mode used is 640x400
-// combining every 4 row and column
-
-// http://tinyvga.com/vga-timing/640x400@70Hz
-
-module JoystickPrototype (
-   // pixel clock
-   input  pclk,
-	input ce_pix,
-	input [15:0] direct_x,  	//left joystick
-	input [15:0] direct_y, 	//right joystick
-	//input reset[1:0],
-   // VGA output
-   output reg	hs,
-   output reg 	vs,
-   output [7:0] r,
-   output [7:0] g,
-   output [7:0] b,
-	output VGA_DE        //data enable should be low in blanking interval
-);
-					
-// 640x400 70HZ VESA according to  http://tinyvga.com/vga-timing/640x400@70Hz
-parameter H   = 640;    // width of visible area
-parameter HFP = 16;     // unused time before hsync
-parameter HS  = 96;     // width of hsync
-parameter HBP = 48;     // unused time after hsync
-
-parameter V   = 400;    // height of visible area
-parameter VFP = 12;     // unused time before vsync
-parameter VS  = 2;      // width of vsync
-parameter VBP = 35;     // unused time after vsync
-
-
-reg[9:0]  h_cnt;        // horizontal pixel counter
-reg[9:0]  v_cnt;        // vertical pixel counter
-
-
-reg hblank;
-reg vblank;
-
-
-// both counters count from the begin of the visible area
-
-// horizontal pixel counter
-always@(posedge pclk) begin
-	if(h_cnt==H+HFP+HS+HBP-1)   h_cnt <= 10'b0; //h_cnt is the last pixel so reset
-	else                        h_cnt <= h_cnt + 1'b1;
-
-	// generate negative hsync signal - hsync has a negative polarity(low during sync)
-	if(h_cnt == H+HFP)    hs <= 1'b0;
-	if(h_cnt == H+HFP+HS) hs <= 1'b1;
-	if(h_cnt == H+HFP+HS) hblank <= 1'b1; else hblank<=1'b0;
-
-end
-
-// veritical pixel counter
-always@(posedge pclk) begin
-	// the vertical counter is processed at the begin of each hsync
-	if(h_cnt == H+HFP) begin
-		if(v_cnt==VS+VBP+V+VFP-1)  v_cnt <= 10'b0; //v_cnt is at the last pixel so reset
-		else							   v_cnt <= v_cnt + 1'b1;
-
-	        // generate positive vsync signal - vsync has a positive polarity(high during sync)
-		if(v_cnt == V+VFP)    vs <= 1'b1;
-		if(v_cnt == V+VFP+VS) vs <= 1'b0;
-		if(v_cnt == V+VFP+VS) vblank <= 1'b1; else vblank<=1'b0;
-	end
-end
-
-/*
-
-// read VRAM
-reg [13:0] video_counter;
-reg [7:0] pixel;						//the color of the pixel
-reg de;									//data enable, low on blanking periods
-reg [2:0] blank = 3'b000;			//this is just an empty register we can use  to zero out values
-											//why use that and not just a literal? I think it was just for clarity
-
-reg [3:0] pix_ena;					//each spot generator gets one bit in this wire
-wire [2:0] col_ena;					//[1:0]player collisions  [2]wall collision
-
-wire [3:0] ballDirect;				//bit 0: right, bit 1: left, bit 2: down, bit 3: up
-wire [2:0] ballHold;					//[2]:up or down [1]:add speed [0]:subtract speed
-wire [3:0] player_speed;			//p1=[1:0] p2=[3:2] even bits true if player is moving in any direction
-											//otherwise odd bits(reset) is true
-											
-reg [1:0] prev;
-reg [10:0] player1Width = 11'sd40;
-reg [10:0] player1Height = 11'sd40;
-reg [10:0] player2Width = 11'sd40;
-reg [10:0] player2Height = 11'sd40;
-
-reg [7:0] x_val;
-reg [7:0] y_val;
-
-
-/*pix_ena[2] = (v_cnt < (direct_x + player1Width)) && (v_cnt > direct_x);
-pix_ena[3] = (h_cnt < (direct_y + player1Height)) && (h_cnt > direct_y);
-r_spotGen #(.START_X(11'sd490), .START_Y(11'sd100), .SPEED(5'sd2), .START_SPEED(5'sd2)) player1(
-.pclk(pclk),
-.direct(direct[3:0]),
-.vs(vs),
-.h_cnt({1'b0,h_cnt[9:0]}),
-.v_cnt({1'b0,v_cnt[9:0]}),
-.speed_enable({player_speed[1], player_speed[0], blank[1]}),
-.spot_enable(pix_ena[0]),
-.reset(blank[1]),
-.width(player1Width), 
-.height(player1Height)
-);
-
-r_spotGen #(.START_X(11'sd490), .START_Y(11'sd100), .SPEED(5'sd2), .START_SPEED(5'sd2)) player2(
-.pclk(pclk),
-.direct(direct2[3:0]),
-.vs(vs),
-.h_cnt({1'b0,h_cnt[9:0]}),
-.v_cnt({1'b0,v_cnt[9:0]}),
-.speed_enable({player_speed[3], player_speed[2], blank[1]}),
-.spot_enable(pix_ena[1]),
-.reset(blank[1]),
-.width(player2Width), 
-.height(player2Height)
-);
-
-/*WALL SPOT
-r_spotGen #(.START_X(10'sd320), .START_Y(10'sd0) ) wall(
-.pclk(pclk),
-.direct({2'b0, wallDirect[1:0]}),
-.vs(vs),
-.h_cnt({1'b0,h_cnt[9:0]}),
-.v_cnt({1'b0,v_cnt[9:0]}),
-.speed_enable(blank),
-.spot_enable(pix_ena[2]),
-.reset(blank[1]),
-.width(wallWidth),
-.height()
-);
-
-/*BALL SPOT
-r_spotGen #(.START_X(-11'sd70), .START_Y(10'sd100), .START_SPEED(10'sd0)) ball(
-.pclk(pclk),
-.direct(ballDirect),
-.vs(vs),
-.h_cnt({1'b0, h_cnt[9:0]}),
-.v_cnt({1'b0,v_cnt[9:0]}),
-.speed_enable(ballHold[1:0]),
-.spot_enable(pix_ena[3]),
-.reset(serve[0] || serve[1]),
-.width(ballWidth), 
-.height(ballHeight)
-);
-//reset is used to reset the ball position for a serve
-
-//works by comparing the enabled pixels
-//serves are also counted as collisions
-r_gateMatrix collisions(
-.p1_col((pix_ena[0] && pix_ena[3]) || serve[0]),
-.p2_col((pix_ena[1] && pix_ena[3]) || serve[1]),
-.wall_col(pix_ena[2] && pix_ena[3]),
-
-.ena_player(col_ena[1:0]),
-
-.flip_v(ballHold[2])
-
-);
-
-//when collision switches flip it to the other 
-
-englishFlipFlop englishFF(
-.pclk(vs),
-.d({english, col_ena[1:0]}), 
-.enable(col_ena[1:0]),
-.direct(ballHold[2]),
-//.prev_enable(prev),
-.p(ballHold[1:0]),
-.q(ballDirect)
-);
-
-/*always@(col_ena[0]) begin
-	prev <= col_ena[1:0];
-end
-
-playerSpeed player1speed(
-	.vs(vs),
-	.direct(direct[3:2]),
-	.speed_enable(player_speed[0]),
-	.speed_reset(player_speed[1])
-);
-
-playerSpeed player2speed(
-	.vs(vs),
-	.direct(direct2[3:2]),
-	.speed_enable(player_speed[2]),
-	.speed_reset(player_speed[3])
-);
-
-
-
-//basically our summer module
-always@(posedge pclk) begin
-        // The video counter is being reset at the begin of each vsync.
-		  y_val = 7'd254 + direct_x[15:8];
-		  x_val = 7'd254 + direct_x[7:0];
-		  
-	pix_ena[0] = (v_cnt < (y_val + player1Width)) && (v_cnt > y_val); //works but axis is sideways?
-	pix_ena[1] = (h_cnt < (x_val + player1Height)) && (h_cnt > x_val);//doesn't work
-
-	// visible area?
-	if((v_cnt < V) && (h_cnt < H)) begin //if within visible area
-		//if(h_cnt[1:0] == 2'b11)
-			video_counter <= video_counter + 14'd1;
-		
-		//if(pix_ena[0] and ball){flip flop ball direction}
-		if(pix_ena[1] && pix_ena[0]) //bitwise OR enabled pixels (returns true if any bit is 1)
-			pixel <= 8'b111_111_11;//turn enabled pixel white
-		else if( v_cnt || h_cnt == 10'd200) pixel = 8'b101_001_11;
-		else pixel <= 8'h00; 
-		de<=1;
-	end else begin
-		if(h_cnt == H+HFP) begin //if h_cnt is at the start of the hsync range
-			if(v_cnt == V+VFP) //if v_cnt is at the start of the vsync range
-				video_counter <= 14'd0;//reset to 0
-			else if((v_cnt < V) && (v_cnt[1:0] != 2'b11))
-			//reset video counter to beginning of line
-				video_counter <= video_counter - 14'd640;
-		de<=0;
-		end
-			
-		pixel <= 8'h00;   //blanks screen to black
-	end
-end
-
-// seperate 8 bits into three colors (332)
-assign r = { pixel[7:5],   pixel[7:5],  pixel[7:6]};
-assign g = { pixel[4:2],  pixel[4:2], pixel[4:3] };
-assign b = { 4{pixel[1:0]}};
-
-//assign VGA_DE  = ~(hblank | vblank);
-assign VGA_DE = de;
-*/
-endmodule
-
-
-
-module mycore
-(
-	input         clk,
+module TableTennis (
+   input         clk,
 	input         reset,
 	
 	input         pal,
 	input         scandouble,
 	
-	input [15:0] direct_x,  	//left joystick
-	input [15:0] direct_y, 	   //right joystick
+	
+	input [3:0] direct,  	//bit 0: right, bit 1: left, bit 2: down, bit 3: up
+	input [3:0] direct2, 	//player two movement
+	input [1:0] wallDirect,	//wall movement
+	input [3:0] english,
+	input [1:0] serve,
+	input [1:0] pos_reset,
+	input [15:0] joy0,
+	input [15:0] joy1,
+	input [3:0] ballSpeed,
+	
 
 	output reg    ce_pix,
 
@@ -267,9 +35,9 @@ module mycore
    output [7:0] g,
    output [7:0] b
 
-	//output  [7:0] video
 );
 
+					
 reg   [9:0] hc;
 reg   [9:0] vc;
 reg   [9:0] vvc;
@@ -331,61 +99,137 @@ always @(posedge clk) begin
 	if (hc == 590) HSync <= 0;
 end
 
-/*reg  [7:0] cos_out;
-wire [5:0] cos_g = cos_out[7:3]+6'd32;
-cos cos(vvc + {vc>>scandouble, 2'b00}, cos_out);*/
 
-reg [7:0] pixel;
-reg [3:0] pix_ena;				
 
+
+reg [7:0] pixel;						//the color of the pixel
+reg de;									//data enable, low on blanking periods
+reg [3:0] blank = 4'b0000;			//this is just an empty register we can use  to zero out values
+
+wire [3:0] pix_ena;					//each spot generator gets one bit in this wire
+wire [1:0] col_ena;					//[1:0]player collisions
+
+wire [3:0] ballDirect;				//bit 0: right, bit 1: left, bit 2: down, bit 3: up
+wire [2:0] ballHold;					//[2]:up or down [1]:add speed [0]:subtract speed
+wire [7:0] player_speed;			//p1=[1:0] p2=[3:2] even bits true if player is moving in any direction
+											//otherwise odd bits(reset) is true
+											
+reg [1:0] prev;
 reg [10:0] player1Width = 11'sd40;
 reg [10:0] player1Height = 11'sd40;
+reg [10:0] ballWidth = 11'sd20;
+reg [10:0] ballHeight = 11'sd20;
 
-reg signed [7:0] x_val;
-reg signed [7:0] y_val;
+reg [7:0] joydirect;  	//bit 0: right, bit 1: left, bit 2: down, bit 3: up
 
-//if =127, ignore the last bit?
-assign y_val = $signed(direct_y[15:8] + 8'd100);//(direct_y > 0)? 7'd100 + direct_y[15:8]: 7'd100 + direct_y[15:8];
-assign x_val = $signed(direct_x[7:0] + 8'd300);//(direct_x > 0)? 7'd100 + direct_x[7:0]: 7'd100 + direct_x[7:0];
+reg [7:0] x_val;
+reg [7:0] y_val;
+
+/*Player Spots*/
+r_spot #(.START_X(11'sd100), .START_Y(11'sd100), .SPEED(5'sd2), .START_SPEED(5'sd2)) player1(
+.pclk(clk),
+.direct(joydirect[3:0]),
+.h_direct(joy0[7:0]),
+.v_direct(joy0[15:8]),
+.vs(VSync),
+.h_cnt({1'b0,hc[9:0]}),
+.v_cnt({1'b0,vc[9:0]}),
+.spot_enable(pix_ena[0]),
+.reset(pos_reset[0]),
+.width(player1Width), 
+.height(player1Height)
+);
+
+r_spot #(.START_X(11'sd390), .START_Y(11'sd100), .SPEED(5'sd2), .START_SPEED(5'sd2)) player2(
+.pclk(clk),
+.direct(joydirect[7:4]),
+.h_direct(joy1[7:0]),
+.v_direct(joy1[15:8]),
+.vs(VSync),
+.h_cnt({1'b0,hc[9:0]}),
+.v_cnt({1'b0,vc[9:0]}),
+.spot_enable(pix_ena[1]),
+.reset(pos_reset[1]),
+.width({player1Width - 3'd5}), 
+.height(player1Height)
+);
+
+/*WALL SPOT*/
+r_spotGen #(.START_X(10'sd250), .START_Y(10'sd0), .START_SPEED(10'sd0) ) wall(
+.pclk(clk),
+.direct({2'b0, wallDirect}),
+.vs(VSync),
+.h_cnt({1'b0,hc[9:0]}),
+.v_cnt({1'b0,vc[9:0]}),
+.speed_enable(blank),
+.speed(5'd3),
+.spot_enable(pix_ena[2]),
+.reset(blank[1]),
+.width(ballWidth),
+.height(10'd500)
+);
+
+/*BALL SPOT*/
+r_spotGen #(.START_X(11'sd150), .START_Y(10'sd100), .START_SPEED(10'sd0), .SPEED(10'sd2)) ball(
+.pclk(clk),
+.direct(ballDirect),
+.vs(VSync),
+.h_cnt({1'b0, hc[9:0]}),
+.v_cnt({1'b0,vc[9:0]}),
+.speed_enable(ballHold[1:0]),
+.speed(ballSpeed),
+.spot_enable(pix_ena[3]),
+.reset(serve[0] || serve[1]),
+.width(ballWidth), 
+.height(ballHeight)
+);
+//reset is used to reset the ball position for a serve
 
 
-//assign y_val = 7'd254 + direct_y[15:8];
-//assign x_val = 7'd254 + direct_x[7:0];
+r_collisions collisions(
+.p1_col((pix_ena[0] && pix_ena[3]) || serve[0]),
+.p2_col((pix_ena[1] && pix_ena[3]) || serve[1]),
 
-//assign y_val = 7'd200 + direct_y[15:8];
-//assign x_val = direct_x[7:0];
-//changing x_val addition had no effect on dot pos
+.ena_player(col_ena[1:0]),
+.flip_v(ballHold[2])
+);
 
 
-//assign video = (direct_x + direct_y > 0)? 8'd1:(cos_g >= rnd_c) ? {cos_g - rnd_c, 2'b00} : 8'd0;
+englishFlipFlop englishFF(
+.pclk(VSync),
+.d({english, col_ena[1:0]}), 
+.enable(col_ena[1:0]),
+.direct(ballHold[2]),
+.p(ballHold[1:0]),
+.q(ballDirect)
+);
 
-always @(posedge clk) begin
-	//Should width and height be the other way around?
-	//pix_ena[0] = ((vc < (y_val + player1Width) ) && (vc > y_val));
-	//pix_ena[1] = ((hc < (x_val + player1Height)) && (hc > x_val));
+
+joystick_direction p1direct(
+	.joystick(joy0),
+	.clk(clk),
 	
-	pix_ena[0] = (vc >= $signed(y_val) && vc <= $signed((player1Height + y_val)));
-	pix_ena[1] = (hc >= $signed(x_val) && hc <= $signed((player1Width + x_val)));
-	
-	
-	pix_ena[2] = (vc == $signed(direct_y[15:8])+ 7'd100);
-	pix_ena[3] = (hc == $signed(direct_x[7:0]) + 7'd100);
-	
-	if(pix_ena[2] && pix_ena[3])
-			pixel <= 8'b101_111_11;
-	else if(pix_ena[1] && pix_ena[0])
-			pixel <= 8'b111_101_11;//turn enabled pixel white
-	else if( vc && hc == 10'd200) pixel = 8'b101_001_11;
-	else if(vc == 10'd127 && hc == 10'd127) pixel = 8'b101_100_11;
-	else pixel <= 8'b111_000_00;//8'h00; 
+	.direction(joydirect[3:0])
+);
 
+joystick_direction p2direct(
+	.joystick(joy1),
+	.clk(clk),
+	
+	.direction(joydirect[7:4])
+
+);
+
+
+always@(posedge clk) begin
+	if(|pix_ena) 
+		pixel <= 8'b111_111_11; 
+	else pixel <= 8'h00; 
 end
 
-// seperate 8 bits into three colors (332)
 assign r = { pixel[7:5],   pixel[7:5],  pixel[7:6]};
 assign g = { pixel[4:2],  pixel[4:2], pixel[4:3] };
 assign b = { 4{pixel[1:0]}};
 
 
 endmodule
-
