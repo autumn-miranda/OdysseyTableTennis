@@ -42,9 +42,11 @@ Reset                    | X
 
 Copy the *.rbf file onto the FPGA board.
 
-## Notes
+## Project History
 
-Developed through a deconstruction of the behavior of the original system. The original console's combinaton of anolog and digital cicuits was considered through this core's use of modules to emulate circuit functionality.
+This re-implementation was developed through a deconstruction of the original Magnavox Odyssey. While the original console's hybrid analog and digital circuity was considered, this re-implementation is based on the behavior of the gameplay. The modularity is loosely based on the actual circuitry, including Spot Generators for the paddles, ball, and center line using the same nominal clock as the original system (NTSC). 
+
+This re-implementation was developed over a three year period from 2023-2026. 
 
 ## TO-DO
 
