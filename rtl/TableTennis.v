@@ -38,8 +38,8 @@ module TableTennis (
 	input [3:0] english,
 	input [1:0] serve,
 	input [1:0] pos_reset,
-	input [15:0] joy0,
-	input [15:0] joy1,
+	input [23:0] joy0,
+	input [23:0] joy1,
 	input [3:0] ballSpeed,
 	
 
@@ -131,7 +131,8 @@ wire [1:0] col_ena;					//[1:0]player collisions
 wire [3:0] ballDirect;				//bit 0: right, bit 1: left, bit 2: down, bit 3: up
 wire [2:0] ballHold;					//[2]:up or down [1]:add speed [0]:subtract speed
 wire [7:0] player_speed;			//p1=[1:0] p2=[3:2] even bits true if player is moving in any direction
-											//otherwise odd bits(reset) is true
+wire [7:0] ballJoy;					//otherwise odd bits(reset) is true
+wire [7:0] englishDirect;
 											
 reg [1:0] prev;
 reg [10:0] player1Width = 11'sd40;
@@ -177,6 +178,7 @@ r_spot #(.START_X(11'sd390), .START_Y(11'sd100), .SPEED(5'sd2), .START_SPEED(5's
 r_spotGen #(.START_X(10'sd250), .START_Y(10'sd0), .START_SPEED(10'sd0) ) wall(
 .pclk(clk),
 .direct({2'b0, wallDirect}),
+.v_direct({blank, blank[2:0]}),
 .vs(VSync),
 .h_cnt({1'b0,hc[9:0]}),
 .v_cnt({1'b0,vc[9:0]}),
@@ -193,6 +195,7 @@ r_spotGen #(.START_X(10'sd250), .START_Y(10'sd0), .START_SPEED(10'sd0) ) wall(
 r_spotGen #(.START_X(11'sd150), .START_Y(10'sd100), .START_SPEED(10'sd0), .SPEED(10'sd2)) ball(
 .pclk(clk),
 .direct(ballDirect),
+.v_direct(ballJoy),
 .vs(VSync),
 .h_cnt({1'b0, hc[9:0]}),
 .v_cnt({1'b0,vc[9:0]}),
@@ -216,18 +219,32 @@ r_collisions collisions(
 );
 
 
-englishFlipFlop englishFF(
+/*englishFlipFlop englishFF(
 .pclk(VSync),
 .d({english, col_ena[1:0]}), 
 .enable(col_ena[1:0]),
 .direct(ballHold[2]),
 .p(ballHold[1:0]),
 .q(ballDirect)
+);*/
+
+r_englishFlipFlop englishFF(
+.pclk(VSync),
+.d_enable(english),
+.eng_direct(englishDirect), 
+.enable(col_ena[1:0]),
+.p1_joy(joy0[23:8]),
+.p2_joy(joy1[23:8]),
+.p(ballDirect),
+.q(ballJoy)
 );
+
+
 
 
 joystick_direction p1direct(
 	.joystick(joy0),
+	.block_enable(english[1:0]),
 	.clk(clk),
 	
 	.direction(joydirect[3:0])
@@ -235,12 +252,30 @@ joystick_direction p1direct(
 
 joystick_direction p2direct(
 	.joystick(joy1),
+	.block_enable(english[3:2]),
 	.clk(clk),
 	
 	.direction(joydirect[7:4])
 
 );
 
+joystick_direction p1english(
+	.joystick(joy0[23:8]),
+	.block_enable(blank[3:2]),
+	.clk(clk),
+	
+	.direction(englishDirect[3:0])
+);
+
+
+joystick_direction p2english(
+	.joystick(joy1[23:8]),
+	.block_enable(blank[1:0]),
+	.clk(clk),
+	
+	.direction(englishDirect[7:4])
+
+);
 
 always@(posedge clk) begin
 	if(|pix_ena) 

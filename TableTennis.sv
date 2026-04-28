@@ -302,8 +302,8 @@ TableTennis TableTennis
    .serve({joy1[6], joy0[6]}),
 	.pos_reset({joy1[7],joy0[7]}),
    .wallDirect({joy0[8]|joy1[8], joy1[9]|joy0[9]}),
-	.joy0({joy0_stick[31:24], joy0_stick[7:0]}),
-	.joy1({joy1_stick[31:24], joy1_stick[7:0]}),
+	.joy0({joy0_stick[15:8], joy0_stick[31:24], joy0_stick[7:0]}),
+	.joy1({joy1_stick[15:8], joy1_stick[31:24], joy1_stick[7:0]}),
 	.ballSpeed({status[9:6]+5'd3}),
 	
 	.ce_pix(ce_pix),

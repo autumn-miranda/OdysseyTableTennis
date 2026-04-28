@@ -110,13 +110,13 @@ endmodule
 
 
 
+//enable is collision
 /*English flip flop - controls ball direction and which player has the english control*/
 module englishFlipFlop(
 input pclk,
 input [5:0] d, 
 input [1:0] enable,
 input direct,
-
 output reg [1:0] p,
 output reg [3:0] q
 );
@@ -127,8 +127,8 @@ output reg [3:0] q
 		
 		//one AND for each set of controls
 		if(direct) begin //going up
-			p[1] <= ((d[4] && enable[1]) || (d[2] && enable[0]))? 1'b1: 1'b0; //add to speed
-			p[0] <= ((d[5] && enable[1]) || (d[3] && enable[0]))? 1'b1: 1'b0; //subtract speedd
+			p[1] <= ((d[4] && enable[1]) || (d[2] && enable[0]))? 1'b1: 1'b0; //p[1] high - add to speed
+			p[0] <= ((d[5] && enable[1]) || (d[3] && enable[0]))? 1'b1: 1'b0; //p[0] high - subtract speed
 		end
 		else begin //going down
 			p[0] <= ((d[4] && enable[1]) || (d[2] && enable[0]))? 1'b1: 1'b0;
@@ -137,7 +137,7 @@ output reg [3:0] q
 	end
 	
 endmodule
-//up, down, left, right
+//q[3:0] - up, down, left, right
 
 
 
