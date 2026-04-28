@@ -1,9 +1,28 @@
+
+//===========================================================================
 // Based on:
 // A simple system-on-a-chip (SoC) for the MiST
 // (c) 2015 Till Harbaum
 //
-//	Main module for a Magnavox Odyssey Table Tennis Core
-// (c) 2026 Autumn Miranda
+//  Main module for a Magnavox Odyssey Table Tennis Core
+//  Copyright (c) 2023-2026 Autumn Miranda
+//
+//  This program is free software; you can redistribute it and/or modify it
+//  under the terms of the GNU General Public License as published by the Free
+//  Software Foundation; either version 2 of the License, or (at your option)
+//  any later version.
+//
+//  This program is distributed in the hope that it will be useful, but WITHOUT
+//  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+//  more details.
+//
+//  You should have received a copy of the GNU General Public License along
+//  with this program; if not, write to the Free Software Foundation, Inc.,
+//  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//============================================================================
+
 
 module TableTennis (
    input         clk,
@@ -164,6 +183,7 @@ r_spotGen #(.START_X(10'sd250), .START_Y(10'sd0), .START_SPEED(10'sd0) ) wall(
 .speed_enable(blank),
 .speed(5'd3),
 .spot_enable(pix_ena[2]),
+.screen_blank(blank[1:0]),
 .reset(blank[1]),
 .width(ballWidth),
 .height(10'd500)
@@ -179,6 +199,7 @@ r_spotGen #(.START_X(11'sd150), .START_Y(10'sd100), .START_SPEED(10'sd0), .SPEED
 .speed_enable(ballHold[1:0]),
 .speed(ballSpeed),
 .spot_enable(pix_ena[3]),
+.screen_blank({VBlank, HBlank}),
 .reset(serve[0] || serve[1]),
 .width(ballWidth), 
 .height(ballHeight)

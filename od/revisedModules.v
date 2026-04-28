@@ -1,10 +1,25 @@
 //============================================================================
-//  Odyssey Table Tennis revised modules
-//  Copyright (c) 2023-2026 Autumn
+//  Odyssey card revised modules
+//  Copyright (c) 2023-2026 Autumn Miranda
 //
 //  The modules are loosely based on the description of the Odyssey's hardware from
 //  https://www.odysseynow.org/Hardware.html
-//  And from observations of the original game's behavior
+//  And from observations of the original system's behavior
+//
+//  This program is free software; you can redistribute it and/or modify it
+//  under the terms of the GNU General Public License as published by the Free
+//  Software Foundation; either version 2 of the License, or (at your option)
+//  any later version.
+//
+//  This program is distributed in the hope that it will be useful, but WITHOUT
+//  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+//  more details.
+//
+//  You should have received a copy of the GNU General Public License along
+//  with this program; if not, write to the Free Software Foundation, Inc.,
+//  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
 //============================================================================
 
       /*Wall and ball spot generator*/
@@ -17,6 +32,7 @@ input [10:0] h_cnt,
 input [10:0] v_cnt,
 input [2:0] speed_enable,			//0:decrease speed, 1: increase speed, 2: reset
 input [3:0] speed,
+input [1:0] screen_blank,
 input reset,
 input wire [10:0] width, height, 
 
@@ -60,11 +76,25 @@ always@(posedge vs) begin
 				speed_v <= (speed_v[9:0] >= 10'sd2)? 11'sd1: speed_v;
 			end
 			else begin
-				h_move <= (h_move >= 11'sd300)? 11'sd590: -11'sd50;//go to side of screen if in the middle
+				h_move <= (direct[0])? 11'sd590: -11'sd50;//go to side of screen if in the middle
 				speed_v <= (speed_v[9:0] >= 10'sd2)? 11'sd1: speed_v;
 			end
 		end
 	end
+	
+	/*if(reset) begin
+		if((v_move >= 11'sd200 || v_move <= 11'sd200) && screen_blank[1]) begin	//off the top or bottom of screen
+				v_move <= 11'd100;
+			if ((h_move >= 11'sd200 || h_move <= 11'sd200) && screen_blank[0]) begin // off the side of screen
+				//reset speed back to one if it's higher, otherwise stay the same
+				speed_v <= (speed_v[9:0] >= 10'sd2)? 11'sd1: speed_v;
+			end
+			else begin
+				h_move <= (direct[0])? 11'sd590: -11'sd50;//go to side of screen if in the middle
+				speed_v <= (speed_v[9:0] >= 10'sd2)? 11'sd1: speed_v;
+			end
+		end
+	end*/
 	
 end
 	 
