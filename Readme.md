@@ -1,6 +1,6 @@
-# Odyssey Table Tennis core for MiSTer
+# Odyssey Table Tennis Core for MiSTer
 
-## General description
+## General Description
 
 Based on the Template Core for MiSTer. 
 
@@ -32,7 +32,7 @@ Wall Right                      | Start
 
 ### About the Controls
 
-The movement of the player spots is split between the left and right joysticks to emulate the two movement dials on the original controller. The vertical movement is controlled by moving the right joystick vertically, and the horizontal movement is controlled by moving the left joystick horizontally. Holding down the English control will switch the corresponding joystick from the player movement to the ball's vertical movement.
+The movement of the player spots is split between the left and right joysticks to emulate the two movement dials on the original controller. The vertical movement is controlled by moving the right joystick vertically, and the horizontal movement is controlled by moving the left joystick horizontally. Holding down the english control will switch the corresponding joystick from the player movement to the ball's vertical movement.
 
 ### Original Odyssey Controller
 ![Original Odyssey Controller](https://github.com/autumn-miranda/OdysseyTableTennis/blob/master/Images/OdysseyController.jpg)
