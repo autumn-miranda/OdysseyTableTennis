@@ -220,8 +220,8 @@ localparam CONF_STR = {
 	"P1O[9:6],Ball Speed,3,4,5,6,7,8,9,10,11,12,13,14,15,0,1,2;",
 	"-;",
 	"-;",
-	"Jn, English Up, English Down, Serve, Player Position Reset, Wall Left, Wall Right",
-	
+	"Jn, English (Vertical Block), English (Horizontal Block), Serve, Player Position Reset, Wall Left, Wall Right",
+	"-;",
 	"T[0],Reset;",
 	"R[0],Reset and close OSD;",
 	"v,0;", // [optional] config version 0-99. 

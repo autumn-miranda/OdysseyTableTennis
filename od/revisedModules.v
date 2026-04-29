@@ -84,20 +84,6 @@ always@(posedge vs) begin
 		end
 	end
 	
-	/*if(reset) begin
-		if((v_move >= 11'sd200 || v_move <= 11'sd200) && screen_blank[1]) begin	//off the top or bottom of screen
-				v_move <= 11'd100;
-			if ((h_move >= 11'sd200 || h_move <= 11'sd200) && screen_blank[0]) begin // off the side of screen
-				//reset speed back to one if it's higher, otherwise stay the same
-				speed_v <= (speed_v[9:0] >= 10'sd2)? 11'sd1: speed_v;
-			end
-			else begin
-				h_move <= (direct[0])? 11'sd590: -11'sd50;//go to side of screen if in the middle
-				speed_v <= (speed_v[9:0] >= 10'sd2)? 11'sd1: speed_v;
-			end
-		end
-	end*/
-	
 end
 	 
 always @(posedge pclk) begin 
@@ -258,8 +244,6 @@ output reg [7:0] q
 );
 	//d is the joystick controls for the english and the player/ball collision
 	always@(d_enable, enable) begin
-		//p[3] <= (enable[0])? d_enable[1]: d_enable[3] & enable[1];
-		//p[2] <= (enable[0])? d_enable[0]: d_enable[2] & enable[1];
 		
 		p[1:0] <= enable;
 		
@@ -301,6 +285,7 @@ output reg [7:0] q
 	
 endmodule
 //p[1:0] - up, down
+//p[3:2] - left, right
 
 
 
