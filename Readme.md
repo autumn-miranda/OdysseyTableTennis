@@ -4,7 +4,7 @@
 
 Based on the Template Core for MiSTer. 
 
-This core recreates the behavior of the Magnavox Odyssey's Table Tennis game. 
+This core recreates the behavior of the Magnavox Odyssey's Table Tennis game. You can learn more about the original game here: https://www.odysseynow.org/Games/TableTennis.html
 
 ## Features
 
@@ -19,17 +19,20 @@ Developed on a PS4 controller.
 
 The following are the recommended controls for Joystick Inputs:
 
-Name                     |   Button
--------------------------|---------------------------------
-Horizontal Movement      | Left Joystick
-Vertical Movement        | Right Joystick
-English Up               | R
-English Down             | L
-Serve                    | Y
-Player Position Reset    | A
-Wall Left                | Select
-Wall Right               | Start
-Reset                    | X
+Name                            |   Button
+--------------------------------|---------------------------------
+Horizontal Movement             | Left Joystick
+Vertical Movement               | Right Joystick
+English (Vertical Blocking)     | R
+English (Horizontal Blocking)   | L
+Serve                           | Y
+Player Position Reset           | A
+Wall Left                       | Select
+Wall Right                      | Start
+
+### About the Controls
+
+The movement of the player spots is split between the left and right joysticks to emulate the two movement dials on the original controller. The vertical movement is controlled by moving the right joystick vertically, and the horizontal movement is controlled by moving the left joystick horizontally. Holding down the English control will switch the corresponding joystick from the player movement to the ball's vertical movement.
 
 ### Original Odyssey Controller
 ![Original Odyssey Controller](https://github.com/autumn-miranda/OdysseyTableTennis/blob/master/Images/OdysseyController.jpg)
@@ -40,7 +43,7 @@ Reset                    | X
 
 ## Installation
 
-Copy the *.rbf file onto the FPGA board.
+Copy the *.rbf file onto the FPGA board. Suggested placement is in the _Other folder.
 
 ## Project History
 
@@ -52,13 +55,11 @@ This re-implementation was developed over a three year period from 2023-2026.
 
 ### Improve Core Accuracy
 
-* Switch serve control to triggers instead of bumpers
-* Imitate english dial behavior on triggers
+* Smooth english speed and movement
+* Adjust english to be position based instead of speed based
 * Refactor modules to be suitable for reuse in other Odyssey game card cores
 
 ### Quality of Life / Debug Features
 
 * Mark where ball is when it travels offscreen
-* Add total core reset 
-* Reset english speed on serve
-
+* Add total core reset (reset ball and player position)
