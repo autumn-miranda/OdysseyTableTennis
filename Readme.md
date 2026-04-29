@@ -43,7 +43,7 @@ The movement of the player spots is split between the left and right joysticks t
 
 ## Installation
 
-Copy the *.rbf file onto the FPGA board. Suggested placement is in the _Other folder.
+Copy the *.rbf file onto the FPGA board. Suggested path: /media/fat/_Other/.
 
 ## Project History
 
