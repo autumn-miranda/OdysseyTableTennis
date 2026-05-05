@@ -31,7 +31,6 @@ input [7:0] v_direct,
 input vs,
 input [10:0] h_cnt,
 input [10:0] v_cnt,
-input [2:0] speed_enable,			//0:decrease speed, 1: increase speed, 2: reset
 input [3:0] speed,
 input [1:0] screen_blank,
 input reset,
@@ -194,10 +193,10 @@ module joystick_direction
 	output reg [3:0] direction
 );
 always@(posedge clk) begin
-	direction[0] <= (block_enable[1])? 0: ($signed(joystick[7:0]) > 20)? 1: 0;
-	direction[1] <= (block_enable[1])? 0: ($signed(joystick[7:0]) < -20)? 1: 0;
-	direction[2] <= (block_enable[0])? 0: ($signed(joystick[15:8]) > 20)? 1: 0;
-	direction[3] <= (block_enable[0])? 0: ($signed(joystick[15:8]) < -20)? 1: 0;
+	direction[0] <= (block_enable[0])? 0: ($signed(joystick[7:0]) > 20)? 1: 0;		//right
+	direction[1] <= (block_enable[0])? 0: ($signed(joystick[7:0]) < -20)? 1: 0;	//left
+	direction[2] <= (block_enable[1])? 0: ($signed(joystick[15:8]) > 20)? 1: 0;	//up
+	direction[3] <= (block_enable[1])? 0: ($signed(joystick[15:8]) < -20)? 1: 0;	//down
 
 end
 endmodule
@@ -209,8 +208,7 @@ module r_collisions(
 input p1_col,
 input p2_col,
 
-output reg [1:0] ena_player,
-output reg flip_v
+output reg [1:0] ena_player
 );
 
 //collisions are dealt with only when either collision is High (true)
@@ -221,7 +219,6 @@ always@(posedge p1_col, posedge p2_col) begin
 	ena_player[0] <= (p2_col)? 1'b0: 1'b1;
 	ena_player[1] <= (p1_col)? 1'b0: 1'b1;
 	
-	flip_v = (p1_col)? 1'b1: 1'b0;//flip the vdirection of the ball after a collision
 end
 
 
@@ -243,35 +240,34 @@ output reg [3:0] p,
 output reg [7:0] q
 );
 	//d is the joystick controls for the english and the player/ball collision
-	always@(d_enable, enable) begin
+	always@(d_enable, eng_direct[7:6], eng_direct[5:4], eng_direct[3:2], eng_direct[1:0], enable) begin
 		
-		p[1:0] <= enable;
+		p[1:0] = enable;
 		
+		//p1 has control
 		if(enable[0]) begin
 			if(d_enable[0]) begin
-				q <= p1_joy[7:0];
+				q <= p1_joy[15:8];
 				p[3:2] <= eng_direct[3:2]; 
 			end
-				
 			else if(d_enable[1]) begin
-				q <= p1_joy[15:8];				
+				q <= p1_joy[7:0];				
 				p[3:2] <= eng_direct[1:0];
 			end
-			
 			else begin
 				q <= 8'd0;
 				p[3:2] <= eng_direct[3:2];
 			end
 		end
-		
-		if(enable[1]) begin	
+		//p2 has control
+		else if(enable[1]) begin	
 			if(d_enable[2]) begin
-				q <= p2_joy[7:0];
+				q <= p2_joy[15:8];
 				p[3:2] <= eng_direct[7:6];
 			end
 			
 			else if(d_enable[3]) begin
-				q <= p2_joy[15:8];
+				q <= p2_joy[7:0];
 				p[3:2] <= eng_direct[5:4];	
 			end
 				
