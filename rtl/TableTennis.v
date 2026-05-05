@@ -31,17 +31,14 @@ module TableTennis (
 	input         pal,
 	input         scandouble,
 	
-	
-	input [3:0] direct,  	//bit 0: right, bit 1: left, bit 2: down, bit 3: up
-	input [3:0] direct2, 	//player two movement
 	input [1:0] wallDirect,	//wall movement
-	input [3:0] english,
+	input [3:0] english,		
 	input [1:0] serve,
-	input [1:0] pos_reset,
-	input [23:0] joy0,
-	input [23:0] joy1,
+	input [1:0] pos_reset,	//player spot pos reset
+	input [23:0] joy0,		//p1 joysticks
+	input [23:0] joy1,		//p2 joysticks
 	input [3:0] ballSpeed,
-	
+	input reset,
 
 	output reg    ce_pix,
 
@@ -126,24 +123,19 @@ reg de;									//data enable, low on blanking periods
 reg [3:0] blank = 4'b0000;			//this is just an empty register we can use  to zero out values
 
 wire [3:0] pix_ena;					//each spot generator gets one bit in this wire
-wire [1:0] col_ena;					//[1:0]player collisions
+wire [1:0] col_ena;					//player collision enabler - [p2:p1], collision happened if high, stays high until collisions flip
 
 wire [3:0] ballDirect;				//bit 0: right, bit 1: left, bit 2: down, bit 3: up
-wire [2:0] ballHold;					//[2]:up or down [1]:add speed [0]:subtract speed
-wire [7:0] player_speed;			//p1=[1:0] p2=[3:2] even bits true if player is moving in any direction
-wire [7:0] ballJoy;					//otherwise odd bits(reset) is true
-wire [7:0] englishDirect;
+wire [7:0] englishDirect;			//up down direction for the english control, from each joystick.
+wire [7:0] ballJoy;					//hold which joystick is being used for the english
 											
-reg [1:0] prev;
 reg [10:0] player1Width = 11'sd40;
-reg [10:0] player1Height = 11'sd40;
-reg [10:0] ballWidth = 11'sd20;
+reg [10:0] player1Height = 11'sd25;
+reg [10:0] ballWidth = 11'sd30;
 reg [10:0] ballHeight = 11'sd20;
 
 reg [7:0] joydirect;  	//bit 0: right, bit 1: left, bit 2: down, bit 3: up
 
-reg [7:0] x_val;
-reg [7:0] y_val;
 
 /*Player Spots*/
 r_spot #(.START_X(11'sd100), .START_Y(11'sd100), .SPEED(5'sd2), .START_SPEED(5'sd2)) player1(
@@ -182,12 +174,11 @@ r_spotGen #(.START_X(10'sd250), .START_Y(10'sd0), .START_SPEED(10'sd0) ) wall(
 .vs(VSync),
 .h_cnt({1'b0,hc[9:0]}),
 .v_cnt({1'b0,vc[9:0]}),
-.speed_enable(blank),
-.speed(5'd3),
+.speed(5'd1),
 .spot_enable(pix_ena[2]),
 .screen_blank(blank[1:0]),
 .reset(blank[1]),
-.width(ballWidth),
+.width(ballWidth - 15),
 .height(10'd500)
 );
 
@@ -199,7 +190,6 @@ r_spotGen #(.START_X(11'sd150), .START_Y(10'sd100), .START_SPEED(10'sd0), .SPEED
 .vs(VSync),
 .h_cnt({1'b0, hc[9:0]}),
 .v_cnt({1'b0,vc[9:0]}),
-.speed_enable(ballHold[1:0]),
 .speed(ballSpeed),
 .spot_enable(pix_ena[3]),
 .screen_blank({VBlank, HBlank}),
@@ -209,30 +199,21 @@ r_spotGen #(.START_X(11'sd150), .START_Y(10'sd100), .START_SPEED(10'sd0), .SPEED
 );
 //reset is used to reset the ball position for a serve
 
-
+//collision detection
 r_collisions collisions(
-.p1_col((pix_ena[0] && pix_ena[3]) || serve[0]),
+.p1_col((pix_ena[0] && pix_ena[3]) || serve[0]), //overlapping with p1 or they served
 .p2_col((pix_ena[1] && pix_ena[3]) || serve[1]),
 
-.ena_player(col_ena[1:0]),
-.flip_v(ballHold[2])
+.ena_player(col_ena[1:0]), //[1] high for p2, [0] high for p1
 );
 
 
-/*englishFlipFlop englishFF(
-.pclk(VSync),
-.d({english, col_ena[1:0]}), 
-.enable(col_ena[1:0]),
-.direct(ballHold[2]),
-.p(ballHold[1:0]),
-.q(ballDirect)
-);*/
-
+//controls the direction of the ball and switches control between players + joysticks
 r_englishFlipFlop englishFF(
-.pclk(VSync),
+.pclk(clk),
 .d_enable(english),
-.eng_direct(englishDirect), 
-.enable(col_ena[1:0]),
+.eng_direct(englishDirect), //determines up or down
+.enable(col_ena[1:0]),		//determines left or right
 .p1_joy(joy0[23:8]),
 .p2_joy(joy1[23:8]),
 .p(ballDirect),
@@ -240,8 +221,8 @@ r_englishFlipFlop englishFF(
 );
 
 
-
-
+//determine whether the joystick is off the home position enough to be enabled.
+//May be redundant with spotgen modules, which also check the joystick's position
 joystick_direction p1direct(
 	.joystick(joy0),
 	.block_enable(english[1:0]),
@@ -277,6 +258,7 @@ joystick_direction p2english(
 
 );
 
+//draw enabled pixels on the screen
 always@(posedge clk) begin
 	if(|pix_ena) 
 		pixel <= 8'b111_111_11; 

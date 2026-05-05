@@ -220,8 +220,7 @@ localparam CONF_STR = {
 	"P1O[9:6],Ball Speed,3,4,5,6,7,8,9,10,11,12,13,14,15,0,1,2;",
 	"-;",
 	"-;",
-	"Jn, English (Vertical Block), English (Horizontal Block), Serve, Player Position Reset, Wall Left, Wall Right",
-	"-;",
+	"Jn, English H-Block, English V-Block, Serve, Player Position Reset, Wall Left, Wall Right;",
 	"T[0],Reset;",
 	"R[0],Reset and close OSD;",
 	"v,0;", // [optional] config version 0-99. 
@@ -295,14 +294,13 @@ TableTennis TableTennis
 	.pal(status[2]),
 	.scandouble(forced_scandoubler),
 	
-	
-	.direct(joy0[3:0]),
-   .direct2(joy1[3:0]),
-   .english({joy1[5:4], joy0[5:4]}),
+	//p1 is lower bits (eg serve[0], english[0]) or varables named with 0s (eg joy0)
+	//p2 is higher bits or variables named with 1s
+   .english({joy1[5:4], joy0[5:4]}),												//p2, p1
    .serve({joy1[6], joy0[6]}),
 	.pos_reset({joy1[7],joy0[7]}),
    .wallDirect({joy0[8]|joy1[8], joy1[9]|joy0[9]}),
-	.joy0({joy0_stick[15:8], joy0_stick[31:24], joy0_stick[7:0]}),
+	.joy0({joy0_stick[15:8], joy0_stick[31:24], joy0_stick[7:0]}),			//left vertical, left horizontal, right vertical
 	.joy1({joy1_stick[15:8], joy1_stick[31:24], joy1_stick[7:0]}),
 	.ballSpeed({status[9:6]+5'd3}),
 	
