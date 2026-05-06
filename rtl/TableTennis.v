@@ -35,10 +35,10 @@ module TableTennis (
 	input [3:0] english,		
 	input [1:0] serve,
 	input [1:0] pos_reset,	//player spot pos reset
+	input core_rst,
 	input [23:0] joy0,		//p1 joysticks
 	input [23:0] joy1,		//p2 joysticks
 	input [3:0] ballSpeed,
-	input reset,
 
 	output reg    ce_pix,
 
@@ -120,7 +120,6 @@ end
 
 reg [7:0] pixel;						//the color of the pixel
 reg de;									//data enable, low on blanking periods
-reg [3:0] blank = 4'b0000;			//this is just an empty register we can use  to zero out values
 
 wire [3:0] pix_ena;					//each spot generator gets one bit in this wire
 wire [1:0] col_ena;					//player collision enabler - [p2:p1], collision happened if high, stays high until collisions flip
@@ -147,7 +146,7 @@ r_spot #(.START_X(11'sd100), .START_Y(11'sd100), .SPEED(5'sd2), .START_SPEED(5's
 .h_cnt({1'b0,hc[9:0]}),
 .v_cnt({1'b0,vc[9:0]}),
 .spot_enable(pix_ena[0]),
-.reset(pos_reset[0]),
+.reset(pos_reset[0]||core_rst),
 .width(player1Width), 
 .height(player1Height)
 );
@@ -161,7 +160,7 @@ r_spot #(.START_X(11'sd390), .START_Y(11'sd100), .SPEED(5'sd2), .START_SPEED(5's
 .h_cnt({1'b0,hc[9:0]}),
 .v_cnt({1'b0,vc[9:0]}),
 .spot_enable(pix_ena[1]),
-.reset(pos_reset[1]),
+.reset(pos_reset[1]||core_rst),
 .width({player1Width - 3'd5}), 
 .height(player1Height)
 );
@@ -170,14 +169,15 @@ r_spot #(.START_X(11'sd390), .START_Y(11'sd100), .SPEED(5'sd2), .START_SPEED(5's
 r_spotGen #(.START_X(10'sd250), .START_Y(10'sd0), .START_SPEED(10'sd0) ) wall(
 .pclk(clk),
 .direct({2'b0, wallDirect}),
-.v_direct({blank, blank[2:0]}),
+.v_direct(4'b0),
 .vs(VSync),
 .h_cnt({1'b0,hc[9:0]}),
 .v_cnt({1'b0,vc[9:0]}),
 .speed(5'd1),
 .spot_enable(pix_ena[2]),
-.screen_blank(blank[1:0]),
-.reset(blank[1]),
+.screen_blank(2'b0),
+.serve(1'b0),
+.reset(core_rst),
 .width(ballWidth - 15),
 .height(10'd500)
 );
@@ -193,14 +193,15 @@ r_spotGen #(.START_X(11'sd150), .START_Y(10'sd100), .START_SPEED(10'sd0), .SPEED
 .speed(ballSpeed),
 .spot_enable(pix_ena[3]),
 .screen_blank({VBlank, HBlank}),
-.reset(serve[0] || serve[1]),
+.reset(core_rst),
+.serve(serve[0] || serve[1]),
 .width(ballWidth), 
 .height(ballHeight)
 );
-//reset is used to reset the ball position for a serve
 
 //collision detection
 r_collisions collisions(
+.reset(core_rst),
 .p1_col((pix_ena[0] && pix_ena[3]) || serve[0]), //overlapping with p1 or they served
 .p2_col((pix_ena[1] && pix_ena[3]) || serve[1]),
 
@@ -242,7 +243,7 @@ joystick_direction p2direct(
 
 joystick_direction p1english(
 	.joystick(joy0[23:8]),
-	.block_enable(blank[3:2]),
+	.block_enable(2'b0),
 	.clk(clk),
 	
 	.direction(englishDirect[3:0])
@@ -251,7 +252,7 @@ joystick_direction p1english(
 
 joystick_direction p2english(
 	.joystick(joy1[23:8]),
-	.block_enable(blank[1:0]),
+	.block_enable(2'b0),
 	.clk(clk),
 	
 	.direction(englishDirect[7:4])

@@ -34,6 +34,7 @@ input [10:0] v_cnt,
 input [3:0] speed,
 input [1:0] screen_blank,
 input reset,
+input serve,
 input wire [10:0] width, height, 
 
 output reg spot_enable
@@ -61,26 +62,34 @@ always@(posedge vs) begin
 			
 			
 	
-	if(direct[0] == 1'b1 && h_move <= 11'sd590) h_move <= (h_move + speed_h);    //right
-	if(direct[1] == 1'b1 && h_move >= -11'sd100) h_move <= (h_move - speed_h);  //left
+	if(direct[0] == 1'b1 && h_move <= 11'sd530) h_move <= (h_move + speed_h);    //right
+	if(direct[1] == 1'b1 && h_move >= -11'sd50) h_move <= (h_move - speed_h);  //left
 
-	if(direct[2] == 1'b1 && v_move <= 11'sd500) v_move <= (v_move + speed_v);    //down
-	if(direct[3] == 1'b1 && v_move >= -11'sd100) v_move <= (v_move - speed_v);  //up
+	if(direct[2] == 1'b1 && v_move <= 11'sd240) v_move <= (v_move + speed_v);    //down
+	if(direct[3] == 1'b1 && v_move >= -11'sd50) v_move <= (v_move - speed_v);  //up
 	
 	
 	//reset is currently only used for the ball, not the wall
-	if(reset) begin
-		if(v_move >= 11'sd400 || v_move <= -11'sd50) begin	//off the top or bottom of screen
+	if(serve) begin
+		if(v_move >= 11'sd240 || v_move <= -11'sd30) begin	//off the top or bottom of screen
 				v_move <= 11'd100;
-			if (h_move >= 11'sd590 || h_move <= -11'sd50) begin // off the side of screen
+			if (h_move >= 11'sd530 || h_move <= -11'sd30) begin // off the side of screen
 				//reset speed back to one if it's higher, otherwise stay the same
 				speed_v <= (speed_v[9:0] >= 10'sd2)? 11'sd1: speed_v;
 			end
 			else begin
-				h_move <= (direct[0])? 11'sd590: -11'sd50;//go to side of screen if in the middle
-				speed_v <= (speed_v[9:0] >= 10'sd2)? 11'sd1: speed_v;
+				h_move <= (direct[0])? 11'sd530: -11'sd30;//go to side of screen if in the middle
+				speed_v <= (speed_v[9:0] >= 10'sd2)? speed: speed_v;
 			end
 		end
+	end
+	
+	if(reset) begin
+		h_move <= START_X;
+		v_move <= START_Y; 
+		
+		speed_v <= 0;
+		speed_h <= 0;
 	end
 	
 end
@@ -205,6 +214,7 @@ endmodule
 
 
 module r_collisions(
+input reset,
 input p1_col,
 input p2_col,
 
@@ -213,14 +223,12 @@ output reg [1:0] ena_player
 
 //collisions are dealt with only when either collision is High (true)
 //otherwise they are ignored
-always@(posedge p1_col, posedge p2_col) begin
+always@(posedge p1_col, posedge p2_col, posedge reset) begin
 	//check collision based on whether it last happened with p1 or p2
 	//ex. can't collide with p1 again until p2 has been collided with
-	ena_player[0] <= (p2_col)? 1'b0: 1'b1;
-	ena_player[1] <= (p1_col)? 1'b0: 1'b1;
-	
+	ena_player[0] <= (p2_col | reset)? 1'b0: 1'b1;
+	ena_player[1] <= (p1_col | reset)? 1'b0: 1'b1;
 end
-
 
 endmodule
 
