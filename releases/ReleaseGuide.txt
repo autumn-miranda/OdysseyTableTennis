@@ -1,0 +1,23 @@
+2026_05_06
+- Updated what positions determine when ball is "offscreen"
+- Added total core reset, separate from main menu Reset option
+
+2026_05_05
+- Updated Spot sizes to be more accurate (square)
+- Updated English Joystick controls
+    - Toggle is the bumper on the same side as the joystick
+    - Controls renamed in menu
+- Updated main menu to bring back Reset option
+
+
+2026_04_29
+- Updated English control from buttons to joystick toggle
+    - toggle is the bumper on the opposite side from the joystick
+    - controls still using old menu names (english up and down)
+
+2026_04_27
+- Button based English Control
+    - English value is incremented/decremented using button presses, otherwise current value is held
+    - players share an english value which flips signs on collision
+- Rectangular spots
+

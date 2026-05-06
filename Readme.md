@@ -11,6 +11,7 @@ This core recreates the behavior of the Magnavox Odyssey's Table Tennis game. Yo
 * Wall centering control
 * Adjustable ball speed control
 * Translated 3-handed controls to a PS4 controller 
+* Player position reset and full game reset
 
 
 ## Control Scheme
@@ -21,14 +22,15 @@ The following are the recommended controls for Joystick Inputs:
 
 Name                            |   Button
 --------------------------------|---------------------------------
-Horizontal Movement             | Left Joystick
-Vertical Movement               | Right Joystick
+Horizontal Movement             | Left Joystick (Not Adjustable)
+Vertical Movement               | Right Joystick (Not Adjustable)
 English (Vertical Blocking)     | R
 English (Horizontal Blocking)   | L
 Serve                           | Y
-Player Position Reset           | A
+Player Position Reset           | X
 Wall Left                       | Select
 Wall Right                      | Start
+Game Reset                      | A
 
 ### About the Controls
 
@@ -62,4 +64,3 @@ This re-implementation was developed over a three year period from 2023-2026.
 ### Quality of Life / Debug Features
 
 * Mark where ball is when it travels offscreen
-* Add total core reset (reset ball and player position)
