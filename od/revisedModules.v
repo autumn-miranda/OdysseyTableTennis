@@ -146,7 +146,7 @@ always@(posedge vs) begin
 	else if($signed(h_direct[7:0]) > 20)
 		speed_h <= (h_direct[7:0] >> 8'd4) | 8'd2;
 	else 
-		speed_h <= 0;
+		speed_h <= (speed_h > 0)? speed_h - 1: 0;
 		
 	
 		
